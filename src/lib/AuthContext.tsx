@@ -5,8 +5,12 @@ import type { UserRole } from '@/lib/supabase'
 interface User {
   id: string
   username: string
-  role: 'admin' | 'editor' | 'viewer'
+  role: UserRole
   must_reset_password: boolean
+}
+
+interface Profile {
+  role: UserRole
 }
 
 interface AuthContextType {
@@ -23,11 +27,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [profile, setProfile] = useState<Profile | null>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem('user')
     if (stored) {
-      setUser(JSON.parse(stored))
+      const userData = JSON.parse(stored)
+      setUser(userData)
+      setProfile({ role: userData.role })
     }
     setLoading(false)
   }, [])
@@ -46,11 +53,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const userData = await res.json()
     setUser(userData)
+    setProfile({ role: userData.role })
     localStorage.setItem('user', JSON.stringify(userData))
   }
 
   const logout = () => {
     setUser(null)
+    setProfile(null)
     localStorage.removeItem('user')
   }
 
