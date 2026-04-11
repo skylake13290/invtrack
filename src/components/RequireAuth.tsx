@@ -29,7 +29,7 @@ export default function RequireAuth({ children, minRole = 'viewer' }: Props) {
 
   if (!user) return null
 
-  if (profile && roleRank[profile.role] < roleRank[minRole]) {
+  if (profile && roleRank[profile.role as UserRole] < roleRank[minRole]) {
     return (
       <div className="page-content">
         <div className="alert alert-error" style={{ maxWidth: 480 }}>
