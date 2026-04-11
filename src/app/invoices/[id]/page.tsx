@@ -2,14 +2,15 @@
 import RequireAuth from '@/components/RequireAuth'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { supabase, type Invoice, type InvoiceItem } from '@/lib/supabase'
+import { supabase, type Invoice } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 
-function InvoiceDetailPage({ params }: { params: { id: string } }) {
-  const id = decodeURIComponent(params.id)
-  const [invoice,  setInvoice]  = useState<Invoice | null>(null)
-  const [items,    setItems]    = useState<(InvoiceItem & { item_name: string })[]>([])
+type InvoiceWithCount = Invoice & { item_count: number }
+
+function InvoicesPage() {
+  const [invoices, setInvoices] = useState<InvoiceWithCount[]>([])
   const [loading,  setLoading]  = useState(true)
+  const [search,   setSearch]   = useState('')
 
   useEffect(() => {
     supabase
@@ -17,71 +18,65 @@ function InvoiceDetailPage({ params }: { params: { id: string } }) {
       .select('*, invoice_items(count)')
       .order('issued_at', { ascending: false })
       .then(({ data }) => {
-        setInvoice(
-          (data ?? []).map(inv => ({
+        setInvoices(
+          (data ?? []).map((inv: any) => ({
             ...inv,
-            item_count: inv.invoice_items[0]?.count ?? 0,
+            item_count: inv.invoice_items?.[0]?.count ?? 0,
           }))
         )
         setLoading(false)
       })
-  }, [id])
+  }, [])
 
-  if (loading) return <div className="page-content"><div className="spinner" style={{ margin: '60px auto' }} /></div>
-  if (!invoice) return <div className="page-content"><div className="alert alert-error">Invoice not found.</div></div>
-
-  const totalUnits = items.reduce((s, i) => s + i.qty, 0)
+  const filtered = invoices.filter(i =>
+    !search ||
+    i.id.toLowerCase().includes(search.toLowerCase()) ||
+    i.contractor.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
     <>
       <div className="topbar">
-        <h1 className="page-heading">Invoice Detail</h1>
+        <h1 className="page-heading">Invoices</h1>
         <div className="topbar-actions">
-          <Link href="/invoices" className="btn">← All Invoices</Link>
+          <Link href="/issue" className="btn btn-primary">+ New Invoice</Link>
         </div>
       </div>
       <div className="page-content">
-        <div className="card mb-16" style={{ maxWidth: 620 }}>
-          <div className="flex items-center justify-between mb-16">
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 600 }} className="mono">{invoice.id}</div>
-              <div className="text-muted text-sm" style={{ marginTop: 2 }}>{formatDate(invoice.issued_at)}</div>
-            </div>
-            <span className="badge badge-blue">Issued</span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', rowGap: 10 }}>
-            <div className="text-muted">Contractor</div>   <div className="fw-500">{invoice.contractor}</div>
-            <div className="text-muted">Invoice #</div>    <div className="mono">{invoice.id}</div>
-            <div className="text-muted">Date Issued</div>  <div>{formatDate(invoice.issued_at)}</div>
-            <div className="text-muted">Line Items</div>   <div>{items.length}</div>
-            <div className="text-muted">Total Units</div>  <div><strong>{totalUnits}</strong></div>
-          </div>
+        <div className="search-wrap mb-16" style={{ width: 280 }}>
+          <span className="search-icon">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M10.5 10.5l3.5 3.5-1 1-3.5-3.5A6 6 0 111.5 6 6 6 0 0110.5 10.5zM6 11A5 5 0 106 1a5 5 0 000 10z"/></svg>
+          </span>
+          <input className="form-input" placeholder="Search invoices…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
 
-        <div className="card" style={{ maxWidth: 620 }}>
-          <div className="card-title">Items Issued</div>
+        {loading ? <div className="spinner" /> : (
           <div className="table-wrap">
             <table>
-              <thead><tr><th>Item Code</th><th>Name</th><th>Qty Issued</th></tr></thead>
+              <thead>
+                <tr><th>Invoice #</th><th>Contractor</th><th>Date Issued</th><th>Items</th><th></th></tr>
+              </thead>
               <tbody>
-                {items.map(row => (
-                  <tr key={row.id}>
-                    <td>
-                      <Link href={`/items/${row.inventory_id}`} className="link mono">{row.inventory_id}</Link>
-                    </td>
-                    <td>{row.item_name}</td>
-                    <td><strong>{row.qty}</strong></td>
+                {filtered.length === 0 ? (
+                  <tr><td colSpan={5}><div className="empty-state">No invoices found</div></td></tr>
+                ) : filtered.map(inv => (
+                  <tr key={inv.id}>
+                    <td><span className="mono">{inv.id}</span></td>
+                    <td className="fw-500">{inv.contractor}</td>
+                    <td className="text-muted">{formatDate(inv.issued_at)}</td>
+                    <td><span className="badge badge-gray">{inv.item_count} line{inv.item_count !== 1 ? 's' : ''}</span></td>
+                    <td><Link href={`/invoices/${inv.id}`} className="btn btn-sm">View</Link></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
+        )}
       </div>
     </>
   )
 }
 
-export default function InvoiceDetailPageWrapper({ params }: { params: { id: string } }) {
-  return <RequireAuth><InvoiceDetailPage params={params} /></RequireAuth>
+export default function InvoicesPageWrapper() {
+  return <RequireAuth><InvoicesPage /></RequireAuth>
 }
