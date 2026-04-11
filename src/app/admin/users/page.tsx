@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/AuthContext'
-import AppShell from '@/components/AppShell'
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([])
@@ -97,8 +96,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <AppShell>
-      <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>User Management</h1>
         <button
           onClick={openCreate}
@@ -343,6 +341,5 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
-    </AppShell>
   )
 }
