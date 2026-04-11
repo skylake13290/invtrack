@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/AuthContext'
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [modal, setModal] = useState<'create' | null>(null)
+  const [modal, setModal] = useState<'create' | 'reset' | null>(null)
   const [form, setForm] = useState({ username: '', role: 'viewer' })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
