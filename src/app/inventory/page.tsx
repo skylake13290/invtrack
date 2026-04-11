@@ -25,12 +25,35 @@ function InventoryPage() {
     !search || i.id.toLowerCase().includes(search.toLowerCase()) || i.name.toLowerCase().includes(search.toLowerCase())
   )
 
-  const openAdd = () => {
-    setForm({ id: '', name: '', stock: 0, min_level: 10 })
-    setEditing(null)
-    setError('')
-    setModal('add')
+  const openAdd = async () => {
+  setError('')
+  setEditing(null)
+
+  // Get last item ID
+  const { data } = await supabase
+    .from('inventory')
+    .select('id')
+    .order('id', { ascending: false })
+    .limit(1)
+
+  let seq = 1
+
+  if (data && data.length > 0) {
+    const match = data[0].id.match(/(\d{7})$/)
+    if (match) seq = parseInt(match[1]) + 1
   }
+
+  const newId = `ITM${String(seq).padStart(7, '0')}`
+
+  setForm({
+    id: newId,
+    name: '',
+    stock: 0,
+    min_level: 10
+  })
+
+  setModal('add')
+}
 
   const openEdit = (item: InventoryItem) => {
     setForm({ id: item.id, name: item.name, stock: item.stock, min_level: item.min_level })
@@ -132,7 +155,7 @@ function InventoryPage() {
             {modal === 'add' && (
               <div className="form-group">
                 <label className="form-label">Item Code</label>
-                <input className="form-input" placeholder="e.g. ITM#######" value={form.id} onChange={e => setForm({ ...form, id: e.target.value.toUpperCase() })} />
+                <input className="form-input" placeholder="e.g. ITM#######" value={form.id} readOnly onChange={e => setForm({ ...form, id: e.target.value.toUpperCase() })} />
               </div>
             )}
             <div className="form-group">
