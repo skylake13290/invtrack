@@ -40,7 +40,7 @@ CREATE TABLE users (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   username         TEXT NOT NULL UNIQUE,
   password_hash    TEXT NOT NULL,
-  role             TEXT NOT NULL DEFAULT 'staff' CHECK (role IN ('admin','staff')),
+  role             TEXT NOT NULL DEFAULT 'viewer' CHECK (role IN ('admin','editor','viewer')),
   must_reset_password BOOLEAN NOT NULL DEFAULT true,
   is_active        BOOLEAN NOT NULL DEFAULT true,
   created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),

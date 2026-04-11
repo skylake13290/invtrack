@@ -7,7 +7,7 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState<'create' | null>(null)
-  const [form, setForm] = useState({ username: '', role: 'staff' })
+  const [form, setForm] = useState({ username: '', role: 'viewer' })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [generatedPassword, setGeneratedPassword] = useState('')
@@ -25,7 +25,7 @@ export default function AdminUsersPage() {
   }
 
   const openCreate = () => {
-    setForm({ username: '', role: 'staff' })
+    setForm({ username: '', role: 'viewer' })
     setError('')
     setGeneratedPassword('')
     setModal('create')
@@ -136,7 +136,7 @@ export default function AdminUsersPage() {
                   <td style={{ padding: '0.75rem' }}>
                     <span style={{
                       padding: '0.25rem 0.5rem',
-                      background: u.role === 'admin' ? '#007bff' : '#6c757d',
+                      background: u.role === 'admin' ? '#007bff' : u.role === 'editor' ? '#28a745' : '#6c757d',
                       color: 'white',
                       borderRadius: '4px',
                       fontSize: '0.85rem'
@@ -289,7 +289,8 @@ export default function AdminUsersPage() {
                       borderRadius: '4px'
                     }}
                   >
-                    <option value="staff">Staff</option>
+                    <option value="viewer">Viewer</option>
+                    <option value="editor">Editor</option>
                     <option value="admin">Admin</option>
                   </select>
                 </div>

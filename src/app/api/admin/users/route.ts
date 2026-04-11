@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'username and role required' }, { status: 400 })
   }
 
-  if (!['admin', 'staff'].includes(role)) {
+  if (!['admin', 'editor', 'viewer'].includes(role)) {
     return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
   }
 
@@ -61,7 +61,7 @@ export async function PATCH(req: NextRequest) {
 
   const updates: any = {}
   if (typeof is_active === 'boolean') updates.is_active = is_active
-  if (role && ['admin', 'staff'].includes(role)) updates.role = role
+  if (role && ['admin', 'editor', 'viewer'].includes(role)) updates.role = role
 
   const { data, error } = await supabase
     .from('users')
