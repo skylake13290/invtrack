@@ -11,7 +11,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState('')
   const [generatedPassword, setGeneratedPassword] = useState('')
   const { user: currentUser } = useAuth()
-  const [resetPassword, setResetPassword] = useState('')
+  const [resetPasswordValue, setResetPasswordValue] = useState('')
 
   useEffect(() => {
     load()
@@ -74,7 +74,7 @@ export default function AdminUsersPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
-      setResetPassword(data.password)
+      setResetPasswordValue(data.password)
       setModal('reset')
     } catch (err: any) {
       alert('Error: ' + err.message)
@@ -203,11 +203,11 @@ export default function AdminUsersPage() {
             <h2>New Password</h2>
 
             <code style={{ display: 'block', padding: '1rem', background: '#f5f5f5' }}>
-              {resetPassword}
+              {resetPasswordValue}
             </code>
 
             <button
-              onClick={() => navigator.clipboard.writeText(resetPassword)}
+              onClick={() => navigator.clipboard.writeText(resetPasswordValue)}
             >
               Copy
             </button>
