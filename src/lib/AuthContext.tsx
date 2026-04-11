@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 interface User {
   id: string
   username: string
-  role: 'admin' | 'staff'
+  role: 'admin' | 'editor' | 'viewer'
   must_reset_password: boolean
 }
 
@@ -14,6 +14,7 @@ interface AuthContextType {
   logout: () => void
   loading: boolean
   canWrite: boolean
+  profile: Profile | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -53,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, canWrite: user?.role === 'admin' }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, canWrite: user?.role === 'admin', profile }}>
       {children}
     </AuthContext.Provider>
   )
