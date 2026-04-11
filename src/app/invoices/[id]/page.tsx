@@ -17,7 +17,7 @@ function InvoiceDetailPage({ params }: { params: { id: string } }) {
       .select('*, invoice_items(count)')
       .order('issued_at', { ascending: false })
       .then(({ data }) => {
-        setInvoices(
+        setInvoice(
           (data ?? []).map(inv => ({
             ...inv,
             item_count: inv.invoice_items[0]?.count ?? 0,
