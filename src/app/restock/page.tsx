@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/AuthContext'
-import AppShell from '@/components/AppShell'
 
 export default function RestockPage() {
   const [items, setItems] = useState<any[]>([])
@@ -54,8 +53,7 @@ export default function RestockPage() {
     }
   }
 
-  return (
-    <AppShell>
+  return (    
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <h1 style={{ marginBottom: '1.5rem' }}>Restock Inventory</h1>
 
@@ -177,6 +175,6 @@ export default function RestockPage() {
           </div>
         </div>
       </div>
-    </AppShell>
+    
   )
 }

@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <AuthProvider>
-          {children}
+          <AppShell>{children}</AppShell>
         </AuthProvider>
       </body>
     </html>
