@@ -121,9 +121,9 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div style={{ marginTop: '1rem', fontSize: '0.85rem', color: '#666', textAlign: 'center' }}>
+        /*<div style={{ marginTop: '1rem', fontSize: '0.85rem', color: '#666', textAlign: 'center' }}>
           Default admin: username <code>admin</code>, password <code>Admin@123</code>
-        </div>
+        </div>*/
       </div>
     </div>
   )
