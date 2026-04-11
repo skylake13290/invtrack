@@ -19,17 +19,46 @@ function IssuePage() {
   const [saving,      setSaving]      = useState(false)
 
   useEffect(() => {
-    supabase.from('inventory').select('*').eq('active', true).order('id').then(({ data }) => setInventory(data ?? []))
-    supabase.from('invoices').select('id').order('id', { ascending: false }).limit(1).then(({ data }) => {
-      const year = new Date().getFullYear()
-      let seq = 1
-      if (data && data.length > 0) {
-        const match = data[0].id.match(/(\d+)$/)
-        if (match) seq = parseInt(match[1]) + 1
-      }
-      setInvoiceNo(`INV${year}-${String(seq).padStart(4, '0')}`)
-    })
-  }, [])
+  const loadData = async () => {
+    // Load inventory (unchanged)
+    const { data: inventoryData } = await supabase
+      .from('inventory')
+      .select('*')
+      .eq('active', true)
+      .order('id')
+
+    setInventory(inventoryData ?? [])
+
+    // Generate invoice number (NEW LOGIC)
+    const now = new Date()
+    const yyyy = now.getFullYear()
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    const dd = String(now.getDate()).padStart(2, '0')
+
+    const dateStr = `${yyyy}${mm}${dd}`          // 20260411
+    const prefix = `CF${dateStr}`                // CF20260411
+
+    const { data: invoiceData } = await supabase
+      .from('invoices')
+      .select('id')
+      .like('id', `${prefix}%`)                 // only today's invoices
+      .order('id', { ascending: false })        // highest sequence first
+      .limit(1)
+
+    let seq = 1
+
+    if (invoiceData && invoiceData.length > 0) {
+      const match = invoiceData[0].id.match(/(\d{5})$/)
+      if (match) seq = parseInt(match[1]) + 1
+    }
+
+    const newInvoiceNo = `${prefix}${String(seq).padStart(5, '0')}`
+
+    setInvoiceNo(newInvoiceNo)
+  }
+
+  loadData()
+}, [])
 
   const addRow = () => setRows(r => [...r, { uid: ++uidSeq, inventory_id: '', qty: 1 }])
   const removeRow = (uid: number) => setRows(r => r.filter(x => x.uid !== uid))

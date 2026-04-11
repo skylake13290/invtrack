@@ -132,7 +132,7 @@ function InventoryPage() {
             {modal === 'add' && (
               <div className="form-group">
                 <label className="form-label">Item Code</label>
-                <input className="form-input" placeholder="e.g. INV-009" value={form.id} onChange={e => setForm({ ...form, id: e.target.value.toUpperCase() })} />
+                <input className="form-input" placeholder="e.g. ITM#######" value={form.id} onChange={e => setForm({ ...form, id: e.target.value.toUpperCase() })} />
               </div>
             )}
             <div className="form-group">
