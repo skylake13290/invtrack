@@ -96,7 +96,8 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <>
+      <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>User Management</h1>
         <button
           onClick={openCreate}
@@ -341,5 +342,6 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
+    </>
   )
 }
