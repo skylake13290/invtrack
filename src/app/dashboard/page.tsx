@@ -47,7 +47,7 @@ function Dashboard() {
             <div className="stat-value" style={{ color: lowItems.length > 0 ? '#dc2626' : '#16a34a' }}>{lowItems.length}</div>
             <div className="stat-sub">items need reorder</div>
           </div>
-          <div className="stat-card"><div className="stat-label">Total Invoices</div><div className="stat-value">{invoices.length}</div><div className="stat-sub">all time</div></div>
+          <div className="stat-card"><div className="stat-label">Last Five Invoices</div><div className="stat-value">{invoices.length}</div><div className="stat-sub">all time</div></div>
         </div>
 
         <div className="grid-2">

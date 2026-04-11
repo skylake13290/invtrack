@@ -12,16 +12,19 @@ function InvoiceDetailPage({ params }: { params: { id: string } }) {
   const [loading,  setLoading]  = useState(true)
 
   useEffect(() => {
-    Promise.all([
-      supabase.from('invoices').select('*').eq('id', id).single(),
-      supabase.from('invoice_items').select('*').eq('invoice_id', id),
-      supabase.from('inventory').select('id, name'),
-    ]).then(([invRes, itemsRes, invListRes]) => {
-      setInvoice(invRes.data)
-      const nameMap = new Map((invListRes.data ?? []).map((i: any) => [i.id, i.name]))
-      setItems((itemsRes.data ?? []).map((r: InvoiceItem) => ({ ...r, item_name: nameMap.get(r.inventory_id) ?? '—' })))
-      setLoading(false)
-    })
+    supabase
+      .from('invoices')
+      .select('*, invoice_items(count)')
+      .order('issued_at', { ascending: false })
+      .then(({ data }) => {
+        setInvoices(
+          (data ?? []).map(inv => ({
+            ...inv,
+            item_count: inv.invoice_items[0]?.count ?? 0,
+          }))
+        )
+        setLoading(false)
+      })
   }, [id])
 
   if (loading) return <div className="page-content"><div className="spinner" style={{ margin: '60px auto' }} /></div>
