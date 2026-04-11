@@ -253,7 +253,7 @@ CREATE TRIGGER trg_users_updated_at
 INSERT INTO users (username, password_hash, role, must_reset_password)
 VALUES (
   'admin',
-  '$2a$10$8K1p/a0dL3LKzao4YrXME.lGR7c6QJR6TmH9fKtJ0vD/sZm6QJJha',
+  '$2b$10$RhtcEmcHN9z9TS4F5pVVU.qoz6ARfgjz15cmIAwgouy2YQKgvaGHe',
   'admin',
   true
 );
