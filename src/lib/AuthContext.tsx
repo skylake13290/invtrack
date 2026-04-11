@@ -1,5 +1,6 @@
 'use client'
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import type { UserRole } from '@/lib/supabase'
 
 interface User {
   id: string
