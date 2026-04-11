@@ -11,6 +11,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState('')
   const [generatedPassword, setGeneratedPassword] = useState('')
   const { user: currentUser } = useAuth()
+  const [resetPassword, setResetPassword] = useState('')
 
   useEffect(() => {
     load()
@@ -73,8 +74,8 @@ export default function AdminUsersPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
-      alert(`New password: ${data.password}\n\nPlease save this - it won't be shown again.`)
-      load()
+      setResetPassword(data.password)
+      setModal('reset')
     } catch (err: any) {
       alert('Error: ' + err.message)
     }
@@ -193,6 +194,28 @@ export default function AdminUsersPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {modal === 'reset' && (
+        <div style={overlayStyle} onClick={() => setModal(null)}>
+          <div style={boxStyle} onClick={e => e.stopPropagation()}>
+            <h2>New Password</h2>
+
+            <code style={{ display: 'block', padding: '1rem', background: '#f5f5f5' }}>
+              {resetPassword}
+            </code>
+
+            <button
+              onClick={() => navigator.clipboard.writeText(resetPassword)}
+            >
+              Copy
+            </button>
+
+            <button onClick={() => setModal(null)}>
+              Close
+            </button>
+          </div>
         </div>
       )}
 
