@@ -16,7 +16,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const supabase = getSupabase()
   const body = await req.json()
-  const { name, stock = 0, min_level = 0 } = body
+  const { name, stock = 0, min_level = 0, unit = 'unit' } = body
   
   if (!name) return NextResponse.json({ error: 'name is required' }, { status: 400 })
 
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
   const { data: item, error } = await supabase
     .from('inventory')
-    .insert({ id: itemId, name, stock, min_level })
+    .insert({ id: itemId, name, stock, min_level, unit })
     .select().single()
   
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
@@ -44,7 +44,7 @@ export async function PATCH(req: NextRequest) {
   const { id, ...updates } = await req.json()
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
 
-  const allowed = ['name', 'min_level', 'active']
+  const allowed = ['name', 'min_level', 'active', 'unit']
   const patch = Object.fromEntries(Object.entries(updates).filter(([k]) => allowed.includes(k)))
 
   const { data, error } = await supabase

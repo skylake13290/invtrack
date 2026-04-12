@@ -10,7 +10,7 @@ export const supabase = createClient(url, key, {
 // ── Inventory types ───────────────────────────────────────────
 export type InventoryItem = {
   id: string; name: string; stock: number; min_level: number
-  active: boolean; created_at: string; updated_at: string
+  unit: string; active: boolean; created_at: string; updated_at: string
 }
 export type Invoice = {
   id: string; contractor: string; issued_at: string; created_at: string

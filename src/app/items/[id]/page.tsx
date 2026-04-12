@@ -26,8 +26,9 @@ function ItemDetailPage({ params }: { params: { id: string } }) {
   if (loading) return <div className="page-content"><div className="spinner" style={{ margin: '60px auto' }} /></div>
   if (!item) return <div className="page-content"><div className="alert alert-error">Item not found.</div></div>
 
-  const isLow = item.stock <= item.min_level
+  const isLow  = item.stock <= item.min_level
   const issued = movements.filter(m => m.action === 'issue').reduce((s, m) => s + Math.abs(m.qty_change), 0)
+  const unit   = item.unit || ''
 
   return (
     <>
@@ -44,6 +45,7 @@ function ItemDetailPage({ params }: { params: { id: string } }) {
             <div>
               <div style={{ fontSize: 20, fontWeight: 600 }}>{item.name}</div>
               <div className="mono text-muted" style={{ marginTop: 2 }}>{item.id}</div>
+              {unit && <div className="text-muted" style={{ fontSize: 12, marginTop: 4 }}>Unit: <strong>{unit}</strong></div>}
             </div>
             <span className={`badge ${isLow ? 'badge-red' : 'badge-green'}`}>{isLow ? 'Low Stock' : 'OK'}</span>
           </div>
@@ -51,14 +53,17 @@ function ItemDetailPage({ params }: { params: { id: string } }) {
             <div className="stat-card">
               <div className="stat-label">Current Stock</div>
               <div className="stat-value" style={{ color: isLow ? '#dc2626' : undefined }}>{item.stock.toLocaleString()}</div>
+              {unit && <div className="stat-sub">{unit}</div>}
             </div>
             <div className="stat-card">
               <div className="stat-label">Min Level</div>
               <div className="stat-value">{item.min_level}</div>
+              {unit && <div className="stat-sub">{unit}</div>}
             </div>
             <div className="stat-card">
               <div className="stat-label">Total Issued</div>
               <div className="stat-value">{issued.toLocaleString()}</div>
+              {unit && <div className="stat-sub">{unit}</div>}
             </div>
           </div>
         </div>
@@ -68,7 +73,7 @@ function ItemDetailPage({ params }: { params: { id: string } }) {
           <div className="table-wrap">
             <table>
               <thead>
-                <tr><th>Date</th><th>Type</th><th>Change</th><th>Reference</th><th>Contractor</th></tr>
+                <tr><th>Date</th><th>Type</th><th>Change{unit && ` (${unit})`}</th><th>Reference</th><th>Contractor</th></tr>
               </thead>
               <tbody>
                 {movements.length === 0 ? (

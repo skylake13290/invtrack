@@ -18,7 +18,6 @@ function Dashboard() {
       fetch('/api/invoices').then(r => r.json()),
     ]).then(([invData, invsData]) => {
       setInventory(Array.isArray(invData) ? invData : [])
-      // API returns full invoices with nested items; take only latest 5
       setInvoices((Array.isArray(invsData) ? invsData : []).slice(0, 5))
       setLoading(false)
     })
@@ -62,7 +61,9 @@ function Dashboard() {
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L0 15h16L8 1zm0 3l5.5 9.5H2.5L8 4zM7 7h2v4H7V7zm0 5h2v2H7v-2z"/></svg>
                     <div>
                       <div className="fw-500 text-sm">{item.id} — {item.name}</div>
-                      <div style={{ fontSize: 11 }}>Stock: {item.stock} / Min: {item.min_level}</div>
+                      <div style={{ fontSize: 11 }}>
+                        Stock: {item.stock} {item.unit} / Min: {item.min_level} {item.unit}
+                      </div>
                     </div>
                   </div>
                 </Link>

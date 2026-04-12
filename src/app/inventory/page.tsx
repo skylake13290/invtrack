@@ -10,7 +10,7 @@ function InventoryPage() {
   const [search,  setSearch]  = useState('')
   const [modal,   setModal]   = useState<'add' | 'edit' | null>(null)
   const [editing, setEditing] = useState<InventoryItem | null>(null)
-  const [form,    setForm]    = useState({ id: '', name: '', stock: 0, min_level: 10 })
+  const [form,    setForm]    = useState({ id: '', name: '', stock: 0, min_level: 10, unit: '' })
   const [saving,  setSaving]  = useState(false)
   const [error,   setError]   = useState('')
 
@@ -33,12 +33,12 @@ function InventoryPage() {
     const match = lastId?.match(/(\d{7})$/)
     const seq = match ? parseInt(match[1]) + 1 : 1
     const newId = `ITM${String(seq).padStart(7, '0')}`
-    setForm({ id: newId, name: '', stock: 0, min_level: 10 })
+    setForm({ id: newId, name: '', stock: 0, min_level: 10, unit: '' })
     setModal('add')
   }
 
   const openEdit = (item: InventoryItem) => {
-    setForm({ id: item.id, name: item.name, stock: item.stock, min_level: item.min_level })
+    setForm({ id: item.id, name: item.name, stock: item.stock, min_level: item.min_level, unit: item.unit ?? '' })
     setEditing(item)
     setError('')
     setModal('edit')
@@ -47,6 +47,8 @@ function InventoryPage() {
   const save = async () => {
     setSaving(true)
     setError('')
+    if (!form.unit.trim()) { setError('Unit is required.'); setSaving(false); return }
+
     if (modal === 'add') {
       const res = await fetch('/api/inventory', {
         method: 'POST',
@@ -59,7 +61,7 @@ function InventoryPage() {
       const res = await fetch('/api/inventory', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: editing!.id, name: form.name, min_level: form.min_level }),
+        body: JSON.stringify({ id: editing!.id, name: form.name, min_level: form.min_level, unit: form.unit }),
       })
       const json = await res.json()
       if (!res.ok) { setError(json.error); setSaving(false); return }
@@ -111,8 +113,11 @@ function InventoryPage() {
                     <tr key={item.id}>
                       <td><span className="mono">{item.id}</span></td>
                       <td><Link href={`/items/${item.id}`} className="link fw-500">{item.name}</Link></td>
-                      <td><strong style={{ color: low ? '#dc2626' : undefined }}>{item.stock.toLocaleString()}</strong></td>
-                      <td className="text-muted">{item.min_level}</td>
+                      <td>
+                        <strong style={{ color: low ? '#dc2626' : undefined }}>{item.stock.toLocaleString()}</strong>
+                        {item.unit && <span className="text-muted" style={{ fontSize: 11, marginLeft: 4 }}>{item.unit}</span>}
+                      </td>
+                      <td className="text-muted">{item.min_level} {item.unit && <span style={{ fontSize: 11 }}>{item.unit}</span>}</td>
                       <td><span className={`badge ${low ? 'badge-red' : 'badge-green'}`}>{low ? 'Low Stock' : 'OK'}</span></td>
                       <td>
                         <div className="flex gap-8">
@@ -134,16 +139,29 @@ function InventoryPage() {
         <div className="modal-overlay" onClick={() => setModal(null)}>
           <div className="modal-box" onClick={e => e.stopPropagation()}>
             <div className="modal-title">{modal === 'add' ? 'Add Inventory Item' : `Edit: ${editing?.id}`}</div>
+
             {modal === 'add' && (
               <div className="form-group">
                 <label className="form-label">Item Code</label>
                 <input className="form-input" value={form.id} readOnly />
               </div>
             )}
+
             <div className="form-group">
               <label className="form-label">Name</label>
               <input className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
             </div>
+
+            <div className="form-group">
+              <label className="form-label">Unit <span className="text-muted" style={{ fontWeight: 400 }}>(e.g. kg, pcs, m³, rolls, bags)</span></label>
+              <input
+                className="form-input"
+                placeholder="e.g. kg"
+                value={form.unit}
+                onChange={e => setForm({ ...form, unit: e.target.value })}
+              />
+            </div>
+
             <div className="grid-2">
               {modal === 'add' && (
                 <div className="form-group">
@@ -156,6 +174,7 @@ function InventoryPage() {
                 <input className="form-input" type="number" min={0} value={form.min_level} onChange={e => setForm({ ...form, min_level: +e.target.value })} />
               </div>
             </div>
+
             {error && <div className="alert alert-error mb-12">{error}</div>}
             <div className="modal-footer">
               <button className="btn" onClick={() => setModal(null)}>Cancel</button>
