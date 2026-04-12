@@ -2,7 +2,7 @@
 import RequireAuth from '@/components/RequireAuth'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { supabase, type InventoryItem } from '@/lib/supabase'
+import { type InventoryItem } from '@/lib/supabase'
 
 function InventoryPage() {
   const [items,   setItems]   = useState<InventoryItem[]>([])
@@ -15,8 +15,9 @@ function InventoryPage() {
   const [error,   setError]   = useState('')
 
   const load = async () => {
-    const { data } = await supabase.from('inventory').select('*').eq('active', true).order('id')
-    setItems(data ?? [])
+    const res = await fetch('/api/inventory')
+    const data = await res.json()
+    setItems(Array.isArray(data) ? data : [])
     setLoading(false)
   }
   useEffect(() => { load() }, [])
@@ -25,35 +26,16 @@ function InventoryPage() {
     !search || i.id.toLowerCase().includes(search.toLowerCase()) || i.name.toLowerCase().includes(search.toLowerCase())
   )
 
-  const openAdd = async () => {
-  setError('')
-  setEditing(null)
-
-  // Get last item ID
-  const { data } = await supabase
-    .from('inventory')
-    .select('id')
-    .order('id', { ascending: false })
-    .limit(1)
-
-  let seq = 1
-
-  if (data && data.length > 0) {
-    const match = data[0].id.match(/(\d{7})$/)
-    if (match) seq = parseInt(match[1]) + 1
+  const openAdd = () => {
+    setError('')
+    setEditing(null)
+    const lastId = items.map(i => i.id).sort().at(-1)
+    const match = lastId?.match(/(\d{7})$/)
+    const seq = match ? parseInt(match[1]) + 1 : 1
+    const newId = `ITM${String(seq).padStart(7, '0')}`
+    setForm({ id: newId, name: '', stock: 0, min_level: 10 })
+    setModal('add')
   }
-
-  const newId = `ITM${String(seq).padStart(7, '0')}`
-
-  setForm({
-    id: newId,
-    name: '',
-    stock: 0,
-    min_level: 10
-  })
-
-  setModal('add')
-}
 
   const openEdit = (item: InventoryItem) => {
     setForm({ id: item.id, name: item.name, stock: item.stock, min_level: item.min_level })
@@ -155,7 +137,7 @@ function InventoryPage() {
             {modal === 'add' && (
               <div className="form-group">
                 <label className="form-label">Item Code</label>
-                <input className="form-input" placeholder="e.g. ITM#######" value={form.id} readOnly onChange={e => setForm({ ...form, id: e.target.value.toUpperCase() })} />
+                <input className="form-input" value={form.id} readOnly />
               </div>
             )}
             <div className="form-group">
