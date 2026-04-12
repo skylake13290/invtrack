@@ -8,7 +8,7 @@ export async function GET(
   const supabase = getSupabase()
   const { data, error } = await supabase
     .from('invoices')
-    .select('*, invoice_items(id, inventory_id, qty)')
+    .select('*, invoice_items(id, inventory_id,inventory:inventory_id(name), qty)')
     .eq('id', params.id)
     .single()
 
