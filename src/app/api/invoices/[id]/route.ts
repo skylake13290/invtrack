@@ -12,6 +12,8 @@ export async function GET(
     .eq('id', params.id)
     .single()
 
+  console.log(JSON.stringify(data, null, 2))
+
   if (error) return NextResponse.json({ error: error.message }, { status: 404 })
   return NextResponse.json(data)
 }
