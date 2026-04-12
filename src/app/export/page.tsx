@@ -1,27 +1,32 @@
 'use client'
 import RequireAuth from '@/components/RequireAuth'
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import { exportToExcel } from '@/lib/export'
 
 function ExportPage() {
   const [loading, setLoading] = useState(false)
   const [done,    setDone]    = useState(false)
+  const [error,   setError]   = useState('')
 
   const handleExport = async () => {
     setLoading(true)
     setDone(false)
-    const [inv, invoices, items, movements] = await Promise.all([
-      supabase.from('inventory').select('*').eq('active', true),
-      supabase.from('invoices').select('*').order('issued_at', { ascending: false }),
-      supabase.from('invoice_items').select('*'),
-      supabase.from('stock_movements').select('*').order('ts', { ascending: false }),
-    ])
+    setError('')
+
+    const res = await fetch('/api/export')
+    if (!res.ok) {
+      const json = await res.json()
+      setError(json.error ?? 'Export failed')
+      setLoading(false)
+      return
+    }
+
+    const data = await res.json()
     exportToExcel({
-      inventory:      inv.data      ?? [],
-      invoices:       invoices.data ?? [],
-      invoiceItems:   items.data    ?? [],
-      stockMovements: movements.data ?? [],
+      inventory:      data.inventory      ?? [],
+      invoices:       data.invoices       ?? [],
+      invoiceItems:   data.invoiceItems   ?? [],
+      stockMovements: data.stockMovements ?? [],
     })
     setLoading(false)
     setDone(true)
@@ -43,7 +48,8 @@ function ExportPage() {
             <li>Invoice Items — per-line issuing detail</li>
             <li>Stock Log — complete movement audit trail</li>
           </ul>
-          {done && <div className="alert alert-success mb-12">Download started — check your downloads folder.</div>}
+          {done  && <div className="alert alert-success mb-12">Download started — check your downloads folder.</div>}
+          {error && <div className="alert alert-error mb-12">{error}</div>}
           <button className="btn btn-primary" onClick={handleExport} disabled={loading}>
             {loading ? 'Preparing…' : '⬇ Download Excel'}
           </button>

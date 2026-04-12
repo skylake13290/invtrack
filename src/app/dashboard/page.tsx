@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { supabase, type InventoryItem, type Invoice } from '@/lib/supabase'
+import { type InventoryItem, type Invoice } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 import RequireAuth from '@/components/RequireAuth'
 import { useAuth } from '@/lib/AuthContext'
@@ -14,11 +14,12 @@ function Dashboard() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from('inventory').select('*').eq('active', true),
-      supabase.from('invoices').select('*').order('issued_at', { ascending: false }).limit(5),
-    ]).then(([inv, invs]) => {
-      setInventory(inv.data ?? [])
-      setInvoices(invs.data ?? [])
+      fetch('/api/inventory').then(r => r.json()),
+      fetch('/api/invoices').then(r => r.json()),
+    ]).then(([invData, invsData]) => {
+      setInventory(Array.isArray(invData) ? invData : [])
+      // API returns full invoices with nested items; take only latest 5
+      setInvoices((Array.isArray(invsData) ? invsData : []).slice(0, 5))
       setLoading(false)
     })
   }, [])

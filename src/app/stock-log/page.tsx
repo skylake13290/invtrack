@@ -2,7 +2,7 @@
 import RequireAuth from '@/components/RequireAuth'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { supabase, type StockMovement, type InventoryItem } from '@/lib/supabase'
+import { type StockMovement, type InventoryItem } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 
 function StockLogPage() {
@@ -18,11 +18,11 @@ function StockLogPage() {
 
   const load = async () => {
     const [movRes, invRes] = await Promise.all([
-      supabase.from('stock_movements').select('*').order('ts', { ascending: false }).limit(300),
-      supabase.from('inventory').select('*').eq('active', true).order('id'),
+      fetch('/api/stock-movements').then(r => r.json()),
+      fetch('/api/inventory').then(r => r.json()),
     ])
-    setMovements(movRes.data ?? [])
-    setInventory(invRes.data ?? [])
+    setMovements(Array.isArray(movRes) ? movRes : [])
+    setInventory(Array.isArray(invRes) ? invRes : [])
     setLoading(false)
   }
   useEffect(() => { load() }, [])

@@ -2,7 +2,6 @@
 import RequireAuth from '@/components/RequireAuth'
 import { useState } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 
 type ItemResult = {
@@ -15,11 +14,11 @@ type InvoiceResult = {
 }
 
 function SearchPage() {
-  const [type,    setType]    = useState<'item' | 'invoice'>('item')
-  const [query,   setQuery]   = useState('')
-  const [loading, setLoading] = useState(false)
-  const [itemRes, setItemRes] = useState<ItemResult | null>(null)
-  const [invRes,  setInvRes]  = useState<InvoiceResult | null>(null)
+  const [type,     setType]     = useState<'item' | 'invoice'>('item')
+  const [query,    setQuery]    = useState('')
+  const [loading,  setLoading]  = useState(false)
+  const [itemRes,  setItemRes]  = useState<ItemResult | null>(null)
+  const [invRes,   setInvRes]   = useState<InvoiceResult | null>(null)
   const [notFound, setNotFound] = useState(false)
 
   const search = async () => {
@@ -29,48 +28,17 @@ function SearchPage() {
     setInvRes(null)
     setNotFound(false)
 
-    if (type === 'item') {
-      // Find item by exact code or name contains
-      const { data: items } = await supabase.from('inventory').select('*')
-        .or(`id.ilike.${query},name.ilike.%${query}%`).limit(1)
-      const item = items?.[0]
-      if (!item) { setNotFound(true); setLoading(false); return }
+    const res  = await fetch(`/api/search?type=${type}&q=${encodeURIComponent(query.trim())}`)
+    const data = await res.json()
 
-      // Get issue movements
-      const { data: movements } = await supabase
-        .from('stock_movements').select('*')
-        .eq('inventory_id', item.id).eq('action', 'issue')
-        .order('ts', { ascending: false })
-
-      const invoiceIds = [...new Set((movements ?? []).map(m => m.reference).filter(Boolean))]
-      let contractorMap = new Map<string, string>()
-      if (invoiceIds.length > 0) {
-        const { data: invs } = await supabase.from('invoices').select('id, contractor').in('id', invoiceIds)
-        invs?.forEach((i: { id: string; contractor: string }) => contractorMap.set(i.id, i.contractor))
-      }
-
-      setItemRes({
-        id: item.id, name: item.name, stock: item.stock, min_level: item.min_level,
-        history: (movements ?? []).map(m => ({
-          ts: m.ts, invoice_id: m.reference ?? '', contractor: contractorMap.get(m.reference ?? '') ?? '—', qty: Math.abs(m.qty_change),
-        })),
-      })
-    } else {
-      const { data: inv } = await supabase.from('invoices').select('*').eq('id', query.trim()).single()
-      if (!inv) { setNotFound(true); setLoading(false); return }
-
-      const { data: invoiceItems } = await supabase.from('invoice_items').select('*').eq('invoice_id', inv.id)
-      const invIds = (invoiceItems ?? []).map((i: { inventory_id: string }) => i.inventory_id)
-      const { data: invList } = await supabase.from('inventory').select('id, name').in('id', invIds)
-      const nameMap = new Map((invList ?? []).map((i: { id: string; name: string }) => [i.id, i.name]))
-
-      setInvRes({
-        id: inv.id, contractor: inv.contractor, issued_at: inv.issued_at,
-        items: (invoiceItems ?? []).map((r: { inventory_id: string; qty: number }) => ({
-          inventory_id: r.inventory_id, item_name: nameMap.get(r.inventory_id) ?? '—', qty: r.qty,
-        })),
-      })
+    if (data.notFound) {
+      setNotFound(true)
+    } else if (data.type === 'item') {
+      setItemRes(data.result)
+    } else if (data.type === 'invoice') {
+      setInvRes(data.result)
     }
+
     setLoading(false)
   }
 
@@ -83,7 +51,14 @@ function SearchPage() {
         <div className="card mb-20" style={{ maxWidth: 540 }}>
           <div className="form-group">
             <label className="form-label">Search type</label>
-            <select className="form-input" value={type} onChange={e => { setType(e.target.value as 'item' | 'invoice'); setItemRes(null); setInvRes(null); setNotFound(false) }}>
+            <select
+              className="form-input"
+              value={type}
+              onChange={e => {
+                setType(e.target.value as 'item' | 'invoice')
+                setItemRes(null); setInvRes(null); setNotFound(false)
+              }}
+            >
               <option value="item">Search by Item Code / Name</option>
               <option value="invoice">Search by Invoice Number</option>
             </select>
@@ -91,7 +66,7 @@ function SearchPage() {
           <div className="flex gap-8">
             <input
               className="form-input"
-              placeholder={type === 'item' ? 'e.g. INV-003 or "Cable Tie"' : 'e.g. INV2025-0001'}
+              placeholder={type === 'item' ? 'e.g. ITM0000001 or "Cable Tie"' : 'e.g. CF2026041100001'}
               value={query}
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && search()}

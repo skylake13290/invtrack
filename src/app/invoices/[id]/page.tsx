@@ -2,81 +2,105 @@
 import RequireAuth from '@/components/RequireAuth'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { supabase, type Invoice } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 
-type InvoiceWithCount = Invoice & { item_count: number }
+type InvoiceDetail = {
+  id: string
+  contractor: string
+  issued_at: string
+  created_at: string
+  invoice_items: { id: number; inventory_id: string; qty: number }[]
+}
 
-function InvoicesPage() {
-  const [invoices, setInvoices] = useState<InvoiceWithCount[]>([])
-  const [loading,  setLoading]  = useState(true)
-  const [search,   setSearch]   = useState('')
+function InvoiceDetailPage({ params }: { params: { id: string } }) {
+  const id = decodeURIComponent(params.id)
+  const [invoice, setInvoice] = useState<InvoiceDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
-    supabase
-      .from('invoices')
-      .select('*, invoice_items(count)')
-      .order('issued_at', { ascending: false })
-      .then(({ data }) => {
-        setInvoices(
-          (data ?? []).map((inv: any) => ({
-            ...inv,
-            item_count: inv.invoice_items?.[0]?.count ?? 0,
-          }))
-        )
-        setLoading(false)
+    fetch(`/api/invoices/${encodeURIComponent(id)}`)
+      .then(r => {
+        if (!r.ok) { setNotFound(true); setLoading(false); return null }
+        return r.json()
       })
-  }, [])
+      .then(data => {
+        if (data) { setInvoice(data); setLoading(false) }
+      })
+  }, [id])
 
-  const filtered = invoices.filter(i =>
-    !search ||
-    i.id.toLowerCase().includes(search.toLowerCase()) ||
-    i.contractor.toLowerCase().includes(search.toLowerCase())
+  if (loading) return <div className="page-content"><div className="spinner" style={{ margin: '60px auto' }} /></div>
+  if (notFound || !invoice) return (
+    <div className="page-content">
+      <div className="alert alert-error" style={{ maxWidth: 480 }}>
+        Invoice <strong>{id}</strong> not found.
+      </div>
+      <Link href="/invoices" className="btn" style={{ marginTop: 12 }}>← Back to Invoices</Link>
+    </div>
   )
+
+  const totalQty = invoice.invoice_items.reduce((s, i) => s + i.qty, 0)
 
   return (
     <>
       <div className="topbar">
-        <h1 className="page-heading">Invoices</h1>
+        <h1 className="page-heading">Invoice Detail</h1>
         <div className="topbar-actions">
-          <Link href="/issue" className="btn btn-primary">+ New Invoice</Link>
+          <Link href="/invoices" className="btn">← Invoices</Link>
         </div>
       </div>
       <div className="page-content">
-        <div className="search-wrap mb-16" style={{ width: 280 }}>
-          <span className="search-icon">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M10.5 10.5l3.5 3.5-1 1-3.5-3.5A6 6 0 111.5 6 6 6 0 0110.5 10.5zM6 11A5 5 0 106 1a5 5 0 000 10z"/></svg>
-          </span>
-          <input className="form-input" placeholder="Search invoices…" value={search} onChange={e => setSearch(e.target.value)} />
+
+        <div className="card mb-16" style={{ maxWidth: 640 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', rowGap: 10, fontSize: 14 }}>
+            <div className="text-muted">Invoice #</div>
+            <div className="mono fw-500" style={{ fontSize: 16 }}>{invoice.id}</div>
+
+            <div className="text-muted">Contractor</div>
+            <div className="fw-500">{invoice.contractor}</div>
+
+            <div className="text-muted">Date Issued</div>
+            <div>{formatDate(invoice.issued_at)}</div>
+
+            <div className="text-muted">Line Items</div>
+            <div>{invoice.invoice_items.length} item type{invoice.invoice_items.length !== 1 ? 's' : ''}</div>
+
+            <div className="text-muted">Total Units</div>
+            <div>{totalQty.toLocaleString()} units</div>
+          </div>
         </div>
 
-        {loading ? <div className="spinner" /> : (
+        <div className="card" style={{ maxWidth: 640 }}>
+          <div className="card-title">Items Issued</div>
           <div className="table-wrap">
             <table>
               <thead>
-                <tr><th>Invoice #</th><th>Contractor</th><th>Date Issued</th><th>Items</th><th></th></tr>
+                <tr><th>#</th><th>Item Code</th><th>Quantity</th></tr>
               </thead>
               <tbody>
-                {filtered.length === 0 ? (
-                  <tr><td colSpan={5}><div className="empty-state">No invoices found</div></td></tr>
-                ) : filtered.map(inv => (
-                  <tr key={inv.id}>
-                    <td><span className="mono">{inv.id}</span></td>
-                    <td className="fw-500">{inv.contractor}</td>
-                    <td className="text-muted">{formatDate(inv.issued_at)}</td>
-                    <td><span className="badge badge-gray">{inv.item_count} line{inv.item_count !== 1 ? 's' : ''}</span></td>
-                    <td><Link href={`/invoices/${inv.id}`} className="btn btn-sm">View</Link></td>
+                {invoice.invoice_items.length === 0 ? (
+                  <tr><td colSpan={3}><div className="empty-state">No items on this invoice</div></td></tr>
+                ) : invoice.invoice_items.map((item, idx) => (
+                  <tr key={item.id}>
+                    <td className="text-muted" style={{ fontSize: 12 }}>{idx + 1}</td>
+                    <td>
+                      <Link href={`/items/${item.inventory_id}`} className="link mono" style={{ fontSize: 13 }}>
+                        {item.inventory_id}
+                      </Link>
+                    </td>
+                    <td><strong>{item.qty}</strong></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        )}
+        </div>
+
       </div>
     </>
   )
 }
 
-export default function InvoicesPageWrapper() {
-  return <RequireAuth><InvoicesPage /></RequireAuth>
+export default function InvoiceDetailPageWrapper({ params }: { params: { id: string } }) {
+  return <RequireAuth><InvoiceDetailPage params={params} /></RequireAuth>
 }

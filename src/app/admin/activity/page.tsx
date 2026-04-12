@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase, type ActivityLog } from '@/lib/supabase'
+import { type ActivityLog } from '@/lib/supabase'
 import RequireAuth from '@/components/RequireAuth'
 import { formatDate } from '@/lib/utils'
 
@@ -27,12 +27,9 @@ function ActivityPage() {
 
   const load = async () => {
     setLoading(true)
-    const { data } = await supabase
-      .from('activity_log')
-      .select('*')
-      .order('ts', { ascending: false })
-      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
-    setLogs(data ?? [])
+    const res = await fetch(`/api/activity-log?page=${page}&limit=${PAGE_SIZE}`)
+    const data = await res.json()
+    setLogs(Array.isArray(data) ? data : [])
     setLoading(false)
   }
 
@@ -63,7 +60,6 @@ function ActivityPage() {
       </div>
       <div className="page-content">
 
-        {/* Summary stats */}
         <div className="grid-4 mb-20">
           <div className="stat-card">
             <div className="stat-label">Total Events</div>
@@ -148,7 +144,6 @@ function ActivityPage() {
               </table>
             </div>
 
-            {/* Pagination */}
             <div className="flex gap-8 items-center" style={{ marginTop: 16 }}>
               <button className="btn btn-sm" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>← Previous</button>
               <span className="text-muted text-sm">Page {page + 1}</span>

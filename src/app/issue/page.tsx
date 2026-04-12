@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase, logActivity, type InventoryItem } from '@/lib/supabase'
+import { type InventoryItem } from '@/lib/supabase'
 import { localDateTimeNow } from '@/lib/utils'
 import RequireAuth from '@/components/RequireAuth'
 
@@ -19,46 +19,39 @@ function IssuePage() {
   const [saving,      setSaving]      = useState(false)
 
   useEffect(() => {
-  const loadData = async () => {
-    // Load inventory (unchanged)
-    const { data: inventoryData } = await supabase
-      .from('inventory')
-      .select('*')
-      .eq('active', true)
-      .order('id')
+    const loadData = async () => {
+      // Load inventory via API route
+      const res = await fetch('/api/inventory')
+      const inventoryData: InventoryItem[] = await res.json()
+      setInventory(Array.isArray(inventoryData) ? inventoryData : [])
 
-    setInventory(inventoryData ?? [])
+      // Generate invoice number via API route
+      const invRes = await fetch('/api/invoices')
+      const invoicesData: { id: string }[] = await invRes.json()
 
-    // Generate invoice number (NEW LOGIC)
-    const now = new Date()
-    const yyyy = now.getFullYear()
-    const mm = String(now.getMonth() + 1).padStart(2, '0')
-    const dd = String(now.getDate()).padStart(2, '0')
+      const now = new Date()
+      const yyyy = now.getFullYear()
+      const mm = String(now.getMonth() + 1).padStart(2, '0')
+      const dd = String(now.getDate()).padStart(2, '0')
+      const dateStr = `${yyyy}${mm}${dd}`
+      const prefix = `CF${dateStr}`
 
-    const dateStr = `${yyyy}${mm}${dd}`          // 20260411
-    const prefix = `CF${dateStr}`                // CF20260411
+      // Filter today's invoices client-side from the API response
+      const todayInvoices = (Array.isArray(invoicesData) ? invoicesData : [])
+        .filter(inv => inv.id.startsWith(prefix))
+        .sort((a, b) => b.id.localeCompare(a.id))
 
-    const { data: invoiceData } = await supabase
-      .from('invoices')
-      .select('id')
-      .like('id', `${prefix}%`)                 // only today's invoices
-      .order('id', { ascending: false })        // highest sequence first
-      .limit(1)
+      let seq = 1
+      if (todayInvoices.length > 0) {
+        const match = todayInvoices[0].id.match(/(\d{5})$/)
+        if (match) seq = parseInt(match[1]) + 1
+      }
 
-    let seq = 1
-
-    if (invoiceData && invoiceData.length > 0) {
-      const match = invoiceData[0].id.match(/(\d{5})$/)
-      if (match) seq = parseInt(match[1]) + 1
+      setInvoiceNo(`${prefix}${String(seq).padStart(5, '0')}`)
     }
 
-    const newInvoiceNo = `${prefix}${String(seq).padStart(5, '0')}`
-
-    setInvoiceNo(newInvoiceNo)
-  }
-
-  loadData()
-}, [])
+    loadData()
+  }, [])
 
   const addRow = () => setRows(r => [...r, { uid: ++uidSeq, inventory_id: '', qty: 1 }])
   const removeRow = (uid: number) => setRows(r => r.filter(x => x.uid !== uid))
@@ -82,7 +75,6 @@ function IssuePage() {
     })
     const json = await res.json()
     if (!res.ok) { setError(json.error); setSaving(false); return }
-    await logActivity({ action: 'create_invoice', entity_type: 'invoice', entity_id: invoiceNo, detail: { contractor, item_count: valid.length } })
     router.push(`/invoices/${invoiceNo}`)
   }
 

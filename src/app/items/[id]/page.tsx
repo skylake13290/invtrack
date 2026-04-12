@@ -2,10 +2,10 @@
 import RequireAuth from '@/components/RequireAuth'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { supabase, type InventoryItem, type StockMovement } from '@/lib/supabase'
+import { type InventoryItem, type StockMovement } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 
-type Movement = StockMovement & { contractor?: string }
+type Movement = StockMovement & { contractor?: string | null }
 
 function ItemDetailPage({ params }: { params: { id: string } }) {
   const id = decodeURIComponent(params.id)
@@ -14,19 +14,13 @@ function ItemDetailPage({ params }: { params: { id: string } }) {
   const [loading,   setLoading]   = useState(true)
 
   useEffect(() => {
-    Promise.all([
-      supabase.from('inventory').select('*').eq('id', id).single(),
-      supabase.from('stock_movements').select('*').eq('inventory_id', id).order('ts', { ascending: false }),
-      supabase.from('invoices').select('id, contractor'),
-    ]).then(([itemRes, movRes, invRes]) => {
-      setItem(itemRes.data)
-      const contractorMap = new Map((invRes.data ?? []).map((i: { id: string; contractor: string }) => [i.id, i.contractor]))
-      setMovements((movRes.data ?? []).map((m: StockMovement) => ({
-        ...m,
-        contractor: m.reference ? contractorMap.get(m.reference) : undefined,
-      })))
-      setLoading(false)
-    })
+    fetch(`/api/items/${encodeURIComponent(id)}`)
+      .then(r => r.json())
+      .then(data => {
+        setItem(data.item ?? null)
+        setMovements(data.movements ?? [])
+        setLoading(false)
+      })
   }, [id])
 
   if (loading) return <div className="page-content"><div className="spinner" style={{ margin: '60px auto' }} /></div>

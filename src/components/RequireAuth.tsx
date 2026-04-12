@@ -19,7 +19,16 @@ export default function RequireAuth({ children, minRole = 'viewer' }: Props) {
     if (!loading && !user) router.replace('/login')
   }, [loading, user, router])
 
-  if (loading) {
+  export default function RequireAuth({ children, minRole = 'viewer' }: Props) {
+  const { user, profile, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!loading && !user) router.replace('/login')
+  }, [loading, user, router])
+
+  // Block ALL rendering until auth is resolved
+  if (loading || !user) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
         <div className="spinner" />
@@ -27,7 +36,12 @@ export default function RequireAuth({ children, minRole = 'viewer' }: Props) {
     )
   }
 
-  if (!user) return null
+  if (profile && roleRank[profile.role] < roleRank[minRole]) {
+    return (/* access denied UI */)
+  }
+
+  return <>{children}</>
+}
 
   if (profile && roleRank[profile.role] < roleRank[minRole]) {
     return (

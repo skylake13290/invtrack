@@ -2,24 +2,28 @@
 import RequireAuth from '@/components/RequireAuth'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { supabase, type Invoice } from '@/lib/supabase'
+import { type Invoice } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 
+type InvoiceWithCount = Invoice & { item_count: number }
+
 function InvoicesPage() {
-  const [invoices, setInvoices] = useState<(Invoice & { item_count: number })[]>([])
+  const [invoices, setInvoices] = useState<InvoiceWithCount[]>([])
   const [loading,  setLoading]  = useState(true)
   const [search,   setSearch]   = useState('')
 
   useEffect(() => {
-    Promise.all([
-      supabase.from('invoices').select('*').order('issued_at', { ascending: false }),
-      supabase.from('invoice_items').select('invoice_id'),
-    ]).then(([invRes, itemsRes]) => {
-      const countMap = new Map<string, number>()
-      itemsRes.data?.forEach(r => countMap.set(r.invoice_id, (countMap.get(r.invoice_id) ?? 0) + 1))
-      setInvoices((invRes.data ?? []).map(inv => ({ ...inv, item_count: countMap.get(inv.id) ?? 0 })))
-      setLoading(false)
-    })
+    fetch('/api/invoices')
+      .then(r => r.json())
+      .then((data: any[]) => {
+        // API returns invoices with nested invoice_items array
+        const mapped = (Array.isArray(data) ? data : []).map(inv => ({
+          ...inv,
+          item_count: Array.isArray(inv.invoice_items) ? inv.invoice_items.length : 0,
+        }))
+        setInvoices(mapped)
+        setLoading(false)
+      })
   }, [])
 
   const filtered = invoices.filter(i =>
