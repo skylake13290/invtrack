@@ -144,7 +144,8 @@ export default function RestockPage() {
           <div style={{
             background: 'white',
             borderRadius: '8px',
-            overflow: 'hidden',
+            maxHeight: '300px',
+            overflow: 'auto',
             boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
           }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
