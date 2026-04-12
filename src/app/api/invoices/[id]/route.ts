@@ -5,6 +5,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  throw new Error("API HIT")
   const supabase = getSupabase()
   const { data, error } = await supabase
     .from('invoices')
