@@ -17,6 +17,8 @@ function IssuePage() {
   const [rows,        setRows]        = useState<IssueRow[]>([{ uid: ++uidSeq, inventory_id: '', qty: 1 }])
   const [error,       setError]       = useState('')
   const [saving,      setSaving]      = useState(false)
+  const [rowSearch, setRowSearch] = useState<Record<number, string>>({})
+  const [rowOpen,   setRowOpen]   = useState<Record<number, boolean>>({})
 
   useEffect(() => {
     const loadData = async () => {
@@ -109,10 +111,45 @@ function IssuePage() {
             return (
               <div key={row.uid} className="issue-grid" style={{ marginBottom: 8 }}>
                 <div>
-                  <select className="form-input" value={row.inventory_id} onChange={e => updateRow(row.uid, 'inventory_id', e.target.value)}>
-                    <option value="">Select item…</option>
-                    {inventory.map(i => <option key={i.id} value={i.id}>{i.id} — {i.name} ({i.stock} in stock)</option>)}
-                  </select>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      className="form-input"
+                      placeholder="Type to search item…"
+                      value={rowSearch[row.uid] ?? (item ? `${item.id} — ${item.name}` : '')}
+                      onFocus={() => { setRowSearch(s => ({ ...s, [row.uid]: '' })); setRowOpen(o => ({ ...o, [row.uid]: true })) }}
+                      onChange={e => { setRowSearch(s => ({ ...s, [row.uid]: e.target.value })); setRowOpen(o => ({ ...o, [row.uid]: true })) }}
+                      onBlur={() => setTimeout(() => setRowOpen(o => ({ ...o, [row.uid]: false })), 150)}
+                    />
+                    {rowOpen[row.uid] && (
+                      <div style={{ position: 'absolute', zIndex: 10, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 6, width: '100%', maxHeight: 200, overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                        {inventory
+                          .filter(i => {
+                            const q = (rowSearch[row.uid] ?? '').toLowerCase()
+                            return !q || i.name.toLowerCase().includes(q) || i.id.toLowerCase().includes(q)
+                          })
+                          .map(i => (
+                            <div
+                              key={i.id}
+                              onMouseDown={() => {
+                                updateRow(row.uid, 'inventory_id', i.id)
+                                setRowSearch(s => ({ ...s, [row.uid]: undefined as unknown as string }))
+                                setRowOpen(o => ({ ...o, [row.uid]: false }))
+                              }}
+                              style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 13, borderBottom: '1px solid #f3f4f6' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
+                              onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+                            >
+                              <span style={{ fontWeight: 500 }}>{i.id}</span> — {i.name}
+                              <span style={{ float: 'right', color: i.stock <= i.min_level ? '#dc2626' : '#6b7280', fontSize: 12 }}>{i.stock} in stock</span>
+                            </div>
+                          ))
+                        }
+                        {inventory.filter(i => { const q = (rowSearch[row.uid] ?? '').toLowerCase(); return !q || i.name.toLowerCase().includes(q) || i.id.toLowerCase().includes(q) }).length === 0 && (
+                          <div style={{ padding: '8px 12px', color: '#9ca3af', fontSize: 13 }}>No items found</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   {item && <div className="form-hint" style={{ color: overStock ? '#dc2626' : undefined }}>{overStock ? `⚠ Only ${item.stock} available` : `${item.stock} units available`}</div>}
                 </div>
                 <input className="form-input" type="number" min={1} value={row.qty}
