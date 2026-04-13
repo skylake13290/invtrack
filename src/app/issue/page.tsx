@@ -30,27 +30,19 @@ function IssuePage() {
       // Generate invoice number via API route
       const invRes = await fetch('/api/invoices')
       const invoicesData: { id: string }[] = await invRes.json()
-
-      const now = new Date()
-      const yyyy = now.getFullYear()
-      const mm = String(now.getMonth() + 1).padStart(2, '0')
-      const dd = String(now.getDate()).padStart(2, '0')
-      const dateStr = `${yyyy}${mm}${dd}`
-      const prefix = `CF${dateStr}`
-
-      // Filter today's invoices client-side from the API response
-      const todayInvoices = (Array.isArray(invoicesData) ? invoicesData : [])
-        .filter(inv => inv.id.startsWith(prefix))
+          
+      const allInvoices = Array.isArray(invoicesData) ? invoicesData : []
+      const cfInvoices = allInvoices
+        .filter(inv => inv.id.startsWith('CF'))
         .sort((a, b) => b.id.localeCompare(a.id))
-
+          
       let seq = 1
-      if (todayInvoices.length > 0) {
-        const match = todayInvoices[0].id.match(/(\d{5})$/)
+      if (cfInvoices.length > 0) {
+        const match = cfInvoices[0].id.match(/(\d+)$/)
         if (match) seq = parseInt(match[1]) + 1
       }
-
-      setInvoiceNo(`${prefix}${String(seq).padStart(5, '0')}`)
-    }
+      
+      setInvoiceNo(`CF${String(seq).padStart(5, '0')}`)
 
     loadData()
   }, [])

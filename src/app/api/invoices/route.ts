@@ -14,7 +14,8 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const supabase = getSupabase()
-  const { contractor, issued_at, items, user_id, username } = await req.json()
+  const { id, contractor, issued_at, items, user_id, username } = await req.json()
+
 
   if (!contractor || !items?.length) {
     return NextResponse.json({ error: 'contractor and items required' }, { status: 400 })
@@ -40,9 +41,11 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Generate invoice ID
-  const { data: invoiceId, error: idError } = await supabase.rpc('generate_invoice_id')
-  if (idError) return NextResponse.json({ error: idError.message }, { status: 500 })
+  if (!id?.trim()) return NextResponse.json({ error: 'Invoice number is required' }, { status: 400 })
+  const invoiceId = id.trim().toUpperCase()
+
+  const { data: existing } = await supabase.from('invoices').select('id').eq('id', invoiceId).single()
+  if (existing) return NextResponse.json({ error: `Invoice number "${invoiceId}" already exists` }, { status: 400 })
 
   // Create invoice
   const { error: invErr } = await supabase.from('invoices').insert({
