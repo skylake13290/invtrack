@@ -1,10 +1,12 @@
 'use client'
 import RequireAuth from '@/components/RequireAuth'
 import { useEffect, useState } from 'react'
+import { useAuth } from '@/lib/AuthContext' 
 import Link from 'next/link'
 import { type InventoryItem } from '@/lib/supabase'
 
 function InventoryPage() {
+  const { canWrite, user } = useAuth()
   const [items,   setItems]   = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search,  setSearch]  = useState('')
@@ -29,11 +31,7 @@ function InventoryPage() {
   const openAdd = () => {
     setError('')
     setEditing(null)
-    const lastId = items.map(i => i.id).sort().at(-1)
-    const match = lastId?.match(/(\d{7})$/)
-    const seq = match ? parseInt(match[1]) + 1 : 1
-    const newId = `ITM${String(seq).padStart(7, '0')}`
-    setForm({ id: newId, name: '', stock: 0, min_level: 10, unit: '' })
+    setForm({ id: '(auto-assigned)', name: '', stock: 0, min_level: 10, unit: '' })
     setModal('add')
   }
 
@@ -52,7 +50,7 @@ function InventoryPage() {
     if (modal === 'add') {
       const res = await fetch('/api/inventory', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json','x-user-role': user?.role ?? '' },
         body: JSON.stringify(form),
       })
       const json = await res.json()
@@ -60,7 +58,7 @@ function InventoryPage() {
     } else {
       const res = await fetch('/api/inventory', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json','x-user-role': user?.role ?? '' },
         body: JSON.stringify({ id: editing!.id, name: form.name, min_level: form.min_level, unit: form.unit }),
       })
       const json = await res.json()
@@ -75,7 +73,7 @@ function InventoryPage() {
     if (!confirm(`Deactivate ${id}? It will be hidden but data is preserved.`)) return
     await fetch('/api/inventory', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json','x-user-role': user?.role ?? '' },
       body: JSON.stringify({ id, active: false }),
     })
     load()
@@ -86,7 +84,7 @@ function InventoryPage() {
       <div className="topbar">
         <h1 className="page-heading">Inventory</h1>
         <div className="topbar-actions">
-          <button className="btn btn-primary" onClick={openAdd}>+ Add Item</button>
+          {canWrite && <button className="btn btn-primary" onClick={openAdd}>+ Add Item</button>}
         </div>
       </div>
       <div className="page-content">
@@ -122,8 +120,8 @@ function InventoryPage() {
                       <td>
                         <div className="flex gap-8">
                           <Link href={`/items/${item.id}`} className="btn btn-sm">View</Link>
-                          <button className="btn btn-sm" onClick={() => openEdit(item)}>Edit</button>
-                          <button className="btn btn-sm btn-danger" onClick={() => deactivate(item.id)}>Deactivate</button>
+                          {canWrite && <button className="btn btn-sm" onClick={() => openEdit(item)}>Edit</button>}
+                          {canWrite && <button className="btn btn-sm btn-danger" onClick={() => deactivate(item.id)}>Deactivate</button>}
                         </div>
                       </td>
                     </tr>

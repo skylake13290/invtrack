@@ -15,6 +15,10 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const supabase = getSupabase()
+  const userHeader = req.headers.get('x-user-role') // or read from your session/cookie
+  if (!userHeader || !['admin', 'editor'].includes(userHeader)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
   const body = await req.json()
   const { name, stock = 0, min_level = 0, unit = 'unit' } = body
   
@@ -41,6 +45,10 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const supabase = getSupabase()
+  const userHeader = req.headers.get('x-user-role') // or read from your session/cookie
+  if (!userHeader || !['admin', 'editor'].includes(userHeader)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
   const { id, ...updates } = await req.json()
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
 
