@@ -20,16 +20,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
   const body = await req.json()
-  const { name, stock = 0, min_level = 0, unit = 'unit' } = body
+  const { name, id, stock = 0, min_level = 0, unit = 'unit' } = body
   
   if (!name) return NextResponse.json({ error: 'name is required' }, { status: 400 })
-
-  const { data: itemId, error: idError } = await supabase.rpc('generate_item_id')
-  if (idError) return NextResponse.json({ error: idError.message }, { status: 500 })
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
 
   const { data: item, error } = await supabase
     .from('inventory')
-    .insert({ id: itemId, name, stock, min_level, unit })
+    .insert({ id: id.trim(), name, stock, min_level, unit })
     .select().single()
   
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })

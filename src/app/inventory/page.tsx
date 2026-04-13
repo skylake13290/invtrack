@@ -16,6 +16,15 @@ function InventoryPage() {
   const [saving,  setSaving]  = useState(false)
   const [error,   setError]   = useState('')
 
+  const [codeError, setCodeError] = useState('')
+
+  const checkCode = (code: string) => {
+   if (!code.trim()) { setCodeError('Item code is required.'); return }
+   const match = items.find(i => i.id.toLowerCase() === code.toLowerCase())
+   if (match) { setCodeError(`"${code}" is already taken.`); return }
+   setCodeError('')
+  }
+
   const load = async () => {
     const res = await fetch('/api/inventory')
     const data = await res.json()
@@ -30,8 +39,9 @@ function InventoryPage() {
 
   const openAdd = () => {
     setError('')
+    setCodeError('')
     setEditing(null)
-    setForm({ id: '(auto-assigned)', name: '', stock: 0, min_level: 10, unit: '' })
+    setForm({ id: '', name: '', stock: 0, min_level: 10, unit: '' })
     setModal('add')
   }
 
@@ -46,6 +56,11 @@ function InventoryPage() {
     setSaving(true)
     setError('')
     if (!form.unit.trim()) { setError('Unit is required.'); setSaving(false); return }
+
+    if (modal === 'add') {
+      if (!form.id.trim()) { setError('Item code is required.'); setSaving(false); return }
+      if (codeError) { setSaving(false); return }
+    }
 
     if (modal === 'add') {
       const res = await fetch('/api/inventory', {
@@ -141,7 +156,13 @@ function InventoryPage() {
             {modal === 'add' && (
               <div className="form-group">
                 <label className="form-label">Item Code</label>
-                <input className="form-input" value={form.id} readOnly />
+                <input
+                  className="form-input"
+                  placeholder="e.g. anything you like"
+                  value={form.id}
+                  onChange={e => { setForm({ ...form, id: e.target.value }); checkCode(e.target.value) }}
+                />
+                {codeError && <div className="alert alert-error mb-12">{codeError}</div>}
               </div>
             )}
 
