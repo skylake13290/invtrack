@@ -43,7 +43,7 @@ function IssuePage() {
       }
       
       setInvoiceNo(`CF${String(seq).padStart(5, '0')}`)
-
+    }
     loadData()
   }, [])
 
