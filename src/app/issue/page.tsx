@@ -144,8 +144,8 @@ function IssuePage() {
                   </div>
                   {item && <div className="form-hint" style={{ color: overStock ? '#dc2626' : undefined }}>{overStock ? `⚠ Only ${item.stock} available` : `${item.stock} units available`}</div>}
                 </div>
-                <input className="form-input" type="number" min={1} value={row.qty}
-                  onChange={e => updateRow(row.uid, 'qty', Math.max(1, +e.target.value))}
+                <input className="form-input" type="number" min={0.001} step="any" value={row.qty}
+                  onChange={e => updateRow(row.uid, 'qty', Math.max(0.001, +e.target.value))}
                   style={{ textAlign: 'center', borderColor: overStock ? '#dc2626' : undefined }} />
                 <button className="btn btn-sm btn-danger btn-icon" onClick={() => removeRow(row.uid)}>✕</button>
               </div>

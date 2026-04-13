@@ -41,7 +41,7 @@ export default function RestockPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           item_id: selectedItem,
-          quantity: parseInt(quantity),
+          quantity: parseFloat(quantity),
           user_id: user?.id,
           username: user?.username
         })
@@ -98,7 +98,8 @@ export default function RestockPage() {
             type="number"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            min="1"
+            min="0.001"
+            step="any"
             required
             style={{
               width: '100%',

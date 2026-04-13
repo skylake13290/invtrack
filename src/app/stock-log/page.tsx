@@ -134,7 +134,7 @@ function StockLogPage() {
             </div>
             <div className="form-group">
               <label className="form-label">Quantity to Add</label>
-              <input className="form-input" type="number" min={1} value={form.qty} onChange={e => setForm({ ...form, qty: +e.target.value })} />
+              <input className="form-input" type="number" min={0.001} step="any" value={form.qty} onChange={e => setForm({ ...form, qty: +e.target.value })} />
             </div>
             <div className="form-group">
               <label className="form-label">Reference / Note</label>
