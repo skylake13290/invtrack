@@ -158,7 +158,7 @@ function InventoryPage() {
                 <label className="form-label">Item Code</label>
                 <input
                   className="form-input"
-                  placeholder="e.g. anything you like"
+                  placeholder="e.g. SKU123 or MAT-456"
                   value={form.id}
                   onChange={e => { setForm({ ...form, id: e.target.value }); checkCode(e.target.value) }}
                 />
