@@ -33,15 +33,15 @@ function IssuePage() {
           
       const allInvoices = Array.isArray(invoicesData) ? invoicesData : []
       const cfInvoices = allInvoices
-        .filter(inv => inv.id.startsWith('CF'))
+        .filter(inv => /^CF\d{5}$/.test(inv.id))  // ← only match new CF00001 format
         .sort((a, b) => b.id.localeCompare(a.id))
-          
+
       let seq = 1
       if (cfInvoices.length > 0) {
         const match = cfInvoices[0].id.match(/(\d+)$/)
         if (match) seq = parseInt(match[1]) + 1
       }
-      
+
       setInvoiceNo(`CF${String(seq).padStart(5, '0')}`)
     }
     loadData()
