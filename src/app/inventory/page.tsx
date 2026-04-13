@@ -185,12 +185,12 @@ function InventoryPage() {
               {modal === 'add' && (
                 <div className="form-group">
                   <label className="form-label">Initial Stock</label>
-                  <input className="form-input" type="number" min={0} value={form.stock} onChange={e => setForm({ ...form, stock: +e.target.value })} />
+                  <input className="form-input" type="number" min={0} step="any" value={form.stock} onChange={e => setForm({ ...form, stock: +e.target.value })} />
                 </div>
               )}
               <div className="form-group">
                 <label className="form-label">Min Reorder Level</label>
-                <input className="form-input" type="number" min={0} value={form.min_level} onChange={e => setForm({ ...form, min_level: +e.target.value })} />
+                <input className="form-input" type="number" min={0} step="any" value={form.min_level} onChange={e => setForm({ ...form, min_level: +e.target.value })} />
               </div>
             </div>
 
