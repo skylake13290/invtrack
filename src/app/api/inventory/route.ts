@@ -5,12 +5,27 @@ export async function GET() {
   const supabase = getSupabase()
   const { data, error } = await supabase
     .from('inventory')
-    .select('*')
-    .eq('active', true)
-    .order('id')
+    .select(`
+      id,
+      name,
+      min_level,
+      unit,
+      active,
+      stock_movements(qty_change)
+    `)
+.eq('active', true)
+.order('id')
   
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+  const result = (data || []).map((item: any) => ({
+  ...item,
+  stock: (item.stock_movements || []).reduce(
+    (sum: number, m: any) => sum + Number(m.qty_change),
+    0
+  )
+}))
+
+return NextResponse.json(result)
 }
 
 export async function POST(req: NextRequest) {
@@ -27,7 +42,7 @@ export async function POST(req: NextRequest) {
 
   const { data: item, error } = await supabase
     .from('inventory')
-    .insert({ id: id.trim(), name, stock, min_level, unit })
+    .insert({ id: id.trim(), name, min_level, unit })
     .select().single()
   
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })

@@ -34,7 +34,18 @@ export async function GET(
     contractor: m.reference ? contractorMap.get(m.reference) ?? null : null,
   }))
 
-  return NextResponse.json({ item: itemRes.data, movements })
+  const calculatedStock = (movRes.data || []).reduce(
+  (sum: number, m: any) => sum + Number(m.qty_change),
+  0
+)
+
+return NextResponse.json({
+  item: {
+    ...itemRes.data,
+    stock: calculatedStock
+  },
+  movements
+})
 }
 
 // Helper: check if any movement with this reference is an 'issue' action
