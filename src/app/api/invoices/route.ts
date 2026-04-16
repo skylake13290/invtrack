@@ -64,15 +64,13 @@ export async function POST(req: NextRequest) {
 
   // Deduct stock + log
   for (const row of items) {
-    await supabase.rpc('deduct_stock', { p_inventory_id: row.inventory_id, p_qty: row.qty })
-    await supabase.from('stock_movements').insert({
-      inventory_id: row.inventory_id,
-      qty_change: -row.qty,
-      action: 'issue',
-      reference: invoiceId,
-      user_id: user_id || null,
-      username: username || null
-    })
+    await supabase.rpc('deduct_stock', {
+    p_inventory_id: row.inventory_id,
+    p_qty: row.qty,
+    p_invoice_id: invoiceId,
+    p_user_id: user_id || null,
+    p_username: username || null
+  })
   }
 
   return NextResponse.json({ id: invoiceId }, { status: 201 })
