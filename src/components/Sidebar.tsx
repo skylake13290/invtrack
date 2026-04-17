@@ -18,6 +18,7 @@ const nav = [
   { section: 'Admin', adminOnly: true },
   { href: '/admin/users',    label: 'Users',        icon: 'users',    adminOnly: true },
   { href: '/admin/activity', label: 'Activity Log', icon: 'activity', adminOnly: true },
+  { href: '/admin/adjustments', label: 'Adjustments', icon: 'adjust', adminOnly: true },
 ]
 
 const roleColors: Record<string, string> = {
@@ -36,6 +37,7 @@ function Icon({ name }: { name: string }) {
     export:   'M9 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V5L9 1zm0 1.5L12.5 5H9V2.5zM4 11l2-3 1.5 2 1.5-2 2 3H4z',
     users:    'M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6a5 5 0 0110 0H3z',
     activity: 'M1 8h2l2-5 3 10 2-5h3l1-2h-4L8 11 5 1 3 6H1z',
+	adjust: 'M8 1a7 7 0 100 14A7 7 0 008 1zm1 4H7v2H5v2h2v2h2V9h2V7H9V5z',
   }
   return (
     <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16">

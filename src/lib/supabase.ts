@@ -36,6 +36,11 @@ export type ActivityLog = {
   detail: Record<string, unknown> | null; ip_address: string | null; ts: string
 }
 
+export type StockAdjustment = {
+  id: number; inventory_id: string; qty_change: number
+  reason: string; username: string | null; ts: string
+}
+
 // ── Activity logger ───────────────────────────────────────────
 export async function logActivity(params: {
   action: string; entity_type?: string; entity_id?: string
