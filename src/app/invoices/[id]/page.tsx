@@ -7,6 +7,7 @@ import { formatDate } from '@/lib/utils'
 type InvoiceDetail = {
   id: string
   contractor: string
+  job_type: string
   issued_at: string
   created_at: string
   invoice_items: { id: number; inventory_id: string; qty: number }[]
@@ -58,6 +59,9 @@ function InvoiceDetailPage({ params }: { params: { id: string } }) {
 
             <div className="text-muted">Contractor</div>
             <div className="fw-500">{invoice.contractor}</div>
+			
+			<div className="text-muted">Job Type</div>
+			<div>{invoice.job_type}</div>
 
             <div className="text-muted">Date Issued</div>
             <div>{formatDate(invoice.issued_at)}</div>

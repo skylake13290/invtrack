@@ -14,6 +14,7 @@ function IssuePage() {
   const [contractor,  setContractor]  = useState('')
   const [issuedAt,    setIssuedAt]    = useState(localDateTimeNow())
   const [invoiceNo,   setInvoiceNo]   = useState('')
+  const [jobType, setJobType] = useState('')
   const [rows,        setRows]        = useState<IssueRow[]>([{ uid: ++uidSeq, inventory_id: '', qty: 1 }])
   const [error,       setError]       = useState('')
   const [saving,      setSaving]      = useState(false)
@@ -55,6 +56,7 @@ function IssuePage() {
   const submit = async () => {
     setError('')
     if (!contractor.trim()) return setError('Contractor name is required.')
+	if (!jobType.trim()) return setError('Job type is required.')
     if (!invoiceNo.trim())  return setError('Invoice number is required.')
     const valid = rows.filter(r => r.inventory_id && r.qty > 0)
     if (valid.length === 0) return setError('Add at least one item.')
@@ -65,7 +67,7 @@ function IssuePage() {
     const res = await fetch('/api/invoices', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: invoiceNo, contractor: contractor.trim(), issued_at: new Date(issuedAt).toISOString(), items: valid }),
+      body: JSON.stringify({ id: invoiceNo, contractor: contractor.trim(),job_type: jobType.trim(), issued_at: new Date(issuedAt).toISOString(), items: valid }),
     })
     const json = await res.json()
     if (!res.ok) { setError(json.error); setSaving(false); return }
@@ -93,6 +95,10 @@ function IssuePage() {
             <label className="form-label">Invoice Number *</label>
             <input className="form-input" value={invoiceNo} onChange={e => setInvoiceNo(e.target.value)} />
           </div>
+		  <div className="form-group">
+			<label className="form-label">Job Type *</label>
+			<input className="form-input" placeholder="e.g. Foundation Work, Electrical, Plumbing" value={jobType} onChange={e => setJobType(e.target.value)} />
+			</div>
           <div className="flex items-center justify-between mb-12">
             <div className="card-title" style={{ margin: 0 }}>Items to Issue</div>
             <button className="btn btn-sm" onClick={addRow}>+ Add Item</button>

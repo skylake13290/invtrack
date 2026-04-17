@@ -13,7 +13,7 @@ export type InventoryItem = {
   unit: string; active: boolean; created_at: string; updated_at: string
 }
 export type Invoice = {
-  id: string; contractor: string; issued_at: string; created_at: string
+  id: string; contractor: string; job_type: string; issued_at: string; created_at: string
 }
 export type InvoiceItem = {
   id: number; invoice_id: string; inventory_id: string; qty: number

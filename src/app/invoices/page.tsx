@@ -52,15 +52,17 @@ function InvoicesPage() {
           <div className="table-wrap">
             <table>
               <thead>
-                <tr><th>Invoice #</th><th>Contractor</th><th>Date Issued</th><th>Items</th><th></th></tr>
+				<tr><th>Invoice #</th><th>Contractor</th><th>Job Type</th><th>Date Issued</th><th>Items</th><th></th></tr>
+				Items</th><th></th></tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={5}><div className="empty-state">No invoices found</div></td></tr>
+                  <tr><td colSpan={6}><div className="empty-state">No invoices found</div></td></tr>
                 ) : filtered.map(inv => (
                   <tr key={inv.id}>
                     <td><span className="mono">{inv.id}</span></td>
                     <td className="fw-500">{inv.contractor}</td>
+					<td>{inv.job_type}</td>
                     <td className="text-muted">{formatDate(inv.issued_at)}</td>
                     <td><span className="badge badge-gray">{inv.item_count} line{inv.item_count !== 1 ? 's' : ''}</span></td>
                     <td><Link href={`/invoices/${inv.id}`} className="btn btn-sm">View</Link></td>

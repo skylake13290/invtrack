@@ -14,7 +14,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const supabase = getSupabase()
-  const { id, contractor, issued_at, items, user_id, username } = await req.json()
+  const { id, contractor, job_type, issued_at, items, user_id, username } = await req.json()
 
 
   if (!contractor || !items?.length) {
@@ -49,17 +49,21 @@ export async function POST(req: NextRequest) {
 
   // Create invoice
   const { error: invErr } = await supabase.from('invoices').insert({
-    id: invoiceId,
-    contractor,
-    issued_at: issued_at || new Date().toISOString(),
-    issued_by: user_id || null
-  })
+  id: invoiceId,
+  contractor,
+  job_type: job_type.trim(),
+  issued_at: issued_at || new Date().toISOString(),
+  issued_by: user_id || null
+})
   if (invErr) return NextResponse.json({ error: invErr.message }, { status: 400 })
 
   // Insert items
   const { error: itemsErr } = await supabase.from('invoice_items').insert(
     items.map((i: any) => ({ invoice_id: invoiceId, inventory_id: i.inventory_id, qty: i.qty }))
   )
+  if (!job_type?.trim()) {
+  return NextResponse.json({ error: 'job_type is required' }, { status: 400 })}
+  
   if (itemsErr) return NextResponse.json({ error: itemsErr.message }, { status: 400 })
 
   // Deduct stock + log

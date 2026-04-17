@@ -287,3 +287,5 @@ SELECT 'Sample item ID:' AS status, generate_item_id() AS id;
 -- Username: admin
 -- Password: Admin@123
 -- (Must be changed on first login)
+
+ALTER TABLE invoices ADD COLUMN job_type TEXT NOT NULL DEFAULT ''; -- Added job_type column to invoices for future use in categorizing invoice types (e.g. sales, purchases, etc.)
