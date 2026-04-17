@@ -52,8 +52,7 @@ function InvoicesPage() {
           <div className="table-wrap">
             <table>
               <thead>
-				<tr><th>Invoice #</th><th>Contractor</th><th>Job Type</th><th>Date Issued</th><th>Items</th><th></th></tr>
-				Items</th><th></th></tr>
+				<tr><th>Invoice #</th><th>Contractor</th><th>Job Type</th><th>Date Issued</th><th>Items</th><th></th></tr>				
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
