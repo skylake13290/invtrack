@@ -25,6 +25,7 @@ interface AuthContextType {
   logout: () => Promise<void>
   loading: boolean
   canWrite: boolean
+  profile: any | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -74,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user,
+      profile: user, // For backward compatibility, profile is the same as user
       login,
       logout,
       loading,
