@@ -42,9 +42,10 @@ export async function GET(
   0
 )
 
+const { stock: _ignored, ...itemWithoutStock } = itemRes.data
 return NextResponse.json({
   item: {
-    ...itemRes.data,
+    ...itemWithoutStock,
     stock: calculatedStock
   },
   movements
