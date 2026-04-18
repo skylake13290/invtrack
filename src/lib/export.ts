@@ -38,6 +38,7 @@ export function exportToExcel(data: {
   const invListRows = data.invoices.map(inv => ({
     'Invoice #':   inv.id,
     'Contractor':  inv.contractor,
+    'Job Type':    inv.job_type ?? '',
     'Issued At':   inv.issued_at,
     'Line Items':  itemMap.get(inv.id)?.length ?? 0,
     'Total Units': itemMap.get(inv.id)?.reduce((s, r) => s + r.qty, 0) ?? 0,
@@ -50,6 +51,7 @@ export function exportToExcel(data: {
   const detailRows = data.invoiceItems.map(r => ({
     'Invoice #':   r.invoice_id,
     'Contractor':  invMap.get(r.invoice_id)?.contractor ?? '',
+    'Job Type':    invMap.get(r.invoice_id)?.job_type ?? '',
     'Issued At':   invMap.get(r.invoice_id)?.issued_at ?? '',
     'Item Code':   r.inventory_id,
     'Item Name':   itemNameMap.get(r.inventory_id) ?? '',

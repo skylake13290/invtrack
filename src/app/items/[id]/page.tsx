@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { type InventoryItem, type StockMovement } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 
-type Movement = StockMovement & { contractor?: string | null }
+type Movement = StockMovement & { contractor?: string | null; job_type?: string | null }
 
 function ItemDetailPage({ params }: { params: { id: string } }) {
   const id = decodeURIComponent(params.id)
@@ -73,11 +73,11 @@ function ItemDetailPage({ params }: { params: { id: string } }) {
           <div className="table-wrap">
             <table>
               <thead>
-                <tr><th>Date</th><th>Type</th><th>Change{unit && ` (${unit})`}</th><th>Reference</th><th>Contractor</th></tr>
+                <tr><th>Date</th><th>Type</th><th>Change{unit && ` (${unit})`}</th><th>Reference</th><th>Contractor</th><th>Job Type</th></tr>
               </thead>
               <tbody>
                 {movements.length === 0 ? (
-                  <tr><td colSpan={5}><div className="empty-state">No movements recorded</div></td></tr>
+                  <tr><td colSpan={6}><div className="empty-state">No movements recorded</div></td></tr>
                 ) : movements.map(m => (
                   <tr key={m.id}>
                     <td className="text-muted" style={{ fontSize: 12 }}>{formatDate(m.ts)}</td>
@@ -98,6 +98,8 @@ function ItemDetailPage({ params }: { params: { id: string } }) {
                       }
                     </td>
                     <td className="text-muted" style={{ fontSize: 12 }}>{m.contractor ?? '—'}</td>
+                    <td className="text-muted" style={{ fontSize: 12 }}>{m.job_type ?? '—'}</td>
+                  </tr>
                   </tr>
                 ))}
               </tbody>

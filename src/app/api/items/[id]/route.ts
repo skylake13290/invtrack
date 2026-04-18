@@ -25,14 +25,15 @@ export async function GET(
   let contractorMap = new Map<string, string>()
   if (invoiceIds.length > 0) {
     const { data: invs } = await supabase
-      .from('invoices').select('id, contractor').in('id', invoiceIds)
-    invs?.forEach((i: { id: string; contractor: string }) => contractorMap.set(i.id, i.contractor))
+      .from('invoices').select('id, contractor, job_type').in('id', invoiceIds)
+    invs?.forEach((i: { id: string; contractor: string; job_type: string }) => contractorMap.set(i.id, i.contractor + '|||' + (i.job_type ?? '')))
   }
 
-  const movements = (movRes.data ?? []).map((m: any) => ({
-    ...m,
-    contractor: m.reference ? contractorMap.get(m.reference) ?? null : null,
-  }))
+  const movements = (movRes.data ?? []).map((m: any) => {
+    const combined = m.reference ? contractorMap.get(m.reference) ?? null : null
+    const [contractor, job_type] = combined ? combined.split('|||') : [null, null]
+    return { ...m, contractor: contractor ?? null, job_type: job_type ?? null }
+  })
 
   const calculatedStock = (movRes.data || []).reduce(
   (sum: number, m: any) => sum + Number(m.qty_change),
