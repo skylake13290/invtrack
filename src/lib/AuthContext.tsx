@@ -25,7 +25,7 @@ interface AuthContextType {
   logout: () => Promise<void>
   loading: boolean
   canWrite: boolean
-  profile: any | null;
+  profile: User | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
