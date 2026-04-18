@@ -1,8 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/AuthContext'
+import RequireAuth from '@/components/RequireAuth'
 
-export default function AdminUsersPage() {
+function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState<'create' | 'reset' | null>(null)
@@ -384,4 +385,7 @@ export default function AdminUsersPage() {
       )}
     </>
   )
+}
+export default function AdminUsersPageWrapper() {
+  return <RequireAuth minRole="admin"><AdminUsersPage /></RequireAuth>
 }
