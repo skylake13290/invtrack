@@ -1,7 +1,20 @@
+/**
+ * src/app/api/admin/users/route.ts  (FIXED)
+ * ---------------------------------------------------------
+ * Changes from original:
+ *  1. All handlers verify a server-side session (not client headers)
+ *  2. Role is read from the verified JWT, not the request body
+ *  3. admin_id is taken from the verified session, not the request body
+ * ---------------------------------------------------------
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase, hashPassword, generatePassword } from '@/lib/auth'
+import { requireRole } from '@/lib/session'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const sessionOrRes = await requireRole(req, ['admin'])
+  if (sessionOrRes instanceof NextResponse) return sessionOrRes
+
   const supabase = getSupabase()
   const { data, error } = await supabase
     .from('users')
@@ -13,8 +26,12 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const sessionOrRes = await requireRole(req, ['admin'])
+  if (sessionOrRes instanceof NextResponse) return sessionOrRes
+  const session = sessionOrRes
+
   const supabase = getSupabase()
-  const { username, role, admin_id } = await req.json()
+  const { username, role } = await req.json()
 
   if (!username || !role) {
     return NextResponse.json({ error: 'username and role required' }, { status: 400 })
@@ -29,12 +46,7 @@ export async function POST(req: NextRequest) {
 
   const { data: user, error } = await supabase
     .from('users')
-    .insert({
-      username,
-      password_hash: passwordHash,
-      role,
-      must_reset_password: true
-    })
+    .insert({ username, password_hash: passwordHash, role, must_reset_password: true })
     .select('id, username, role')
     .single()
 
@@ -42,24 +54,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
+  // Use session.userId — not a client-supplied admin_id
   await supabase.from('activity_log').insert({
-    user_id: admin_id,
+    user_id: session.userId,
+    username: session.username,
     action: 'create_user',
     entity_type: 'user',
     entity_id: user.id,
-    detail: { username, role }
+    detail: { username, role },
   })
 
   return NextResponse.json({ ...user, password }, { status: 201 })
 }
 
 export async function PATCH(req: NextRequest) {
+  const sessionOrRes = await requireRole(req, ['admin'])
+  if (sessionOrRes instanceof NextResponse) return sessionOrRes
+
   const supabase = getSupabase()
   const { id, is_active, role } = await req.json()
 
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
 
-  const updates: any = {}
+  const updates: Record<string, unknown> = {}
   if (typeof is_active === 'boolean') updates.is_active = is_active
   if (role && ['admin', 'editor', 'viewer'].includes(role)) updates.role = role
 

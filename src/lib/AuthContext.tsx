@@ -1,4 +1,14 @@
 'use client'
+/**
+ * src/lib/AuthContext.tsx  (FIXED)
+ * ---------------------------------------------------------
+ * Changes from original:
+ *  1. No auth state in localStorage — user info is fetched from
+ *     /api/auth/me which reads the HttpOnly session cookie
+ *  2. Role/identity cannot be tampered with by client-side JS
+ *  3. logout() calls the server to clear the cookie
+ * ---------------------------------------------------------
+ */
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import type { UserRole } from '@/lib/supabase'
 
@@ -9,17 +19,12 @@ interface User {
   must_reset_password: boolean
 }
 
-interface Profile {
-  role: UserRole
-}
-
 interface AuthContextType {
   user: User | null
   login: (username: string, password: string) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
   loading: boolean
   canWrite: boolean
-  profile: Profile | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -27,23 +32,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [profile, setProfile] = useState<Profile | null>(null)
 
+  // On mount: verify session with the server (reads HttpOnly cookie automatically)
   useEffect(() => {
-    const stored = localStorage.getItem('user')
-    if (stored) {
-      const userData = JSON.parse(stored)
-      setUser(userData)
-      setProfile({ role: userData.role })
-    }
-    setLoading(false)
+    fetch('/api/auth/me')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) setUser(data)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   const login = async (username: string, password: string) => {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password }),
+      credentials: 'include', // ensures cookie is received and stored
     })
 
     if (!res.ok) {
@@ -53,18 +59,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const userData = await res.json()
     setUser(userData)
-    setProfile({ role: userData.role })
-    localStorage.setItem('user', JSON.stringify(userData))
+    // FIX: No localStorage — the HttpOnly cookie is set by the server response
   }
 
-  const logout = () => {
+  const logout = async () => {
+    // Call server to clear the cookie and log the action
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+    })
     setUser(null)
-    setProfile(null)
-    localStorage.removeItem('user')
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, canWrite: user?.role === 'admin' || user?.role === 'editor', profile }}>
+    <AuthContext.Provider value={{
+      user,
+      login,
+      logout,
+      loading,
+      canWrite: user?.role === 'admin' || user?.role === 'editor',
+    }}>
       {children}
     </AuthContext.Provider>
   )

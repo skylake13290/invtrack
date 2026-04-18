@@ -1,19 +1,31 @@
+/**
+ * src/app/api/auth/logout/route.ts  (FIXED)
+ * ---------------------------------------------------------
+ * Changes from original:
+ *  1. Clears the HttpOnly session cookie
+ *  2. Reads user identity from the verified session (not request body)
+ * ---------------------------------------------------------
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/auth'
+import { getSession, clearSession } from '@/lib/session'
 
 export async function POST(req: NextRequest) {
-  const supabase = getSupabase()
-  const { user_id, username, role } = await req.json()
+  const session = await getSession(req)
 
-  if (user_id) {
+  const res = NextResponse.json({ success: true })
+  clearSession(res) // Expire the HttpOnly cookie
+
+  if (session) {
+    const supabase = getSupabase()
     await supabase.from('activity_log').insert({
-      user_id,
-      username: username || null,
-      role: role || null,
+      user_id: session.userId,
+      username: session.username,
+      role: session.role,
       action: 'logout',
-      entity_type: 'auth'
+      entity_type: 'auth',
     })
   }
 
-  return NextResponse.json({ success: true })
+  return res
 }

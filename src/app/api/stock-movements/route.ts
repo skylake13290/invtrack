@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/auth'
 
+
+// At the top of any route handler that should be authenticated:
+const role = req.headers.get('x-verified-role')
+if (!role) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+// For write operations, also check the role:
+if (!['admin', 'editor'].includes(role)) {
+  return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+}
+
 export async function GET(req: NextRequest) {
   const supabase = getSupabase()
   const { searchParams } = new URL(req.url)
