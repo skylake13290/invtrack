@@ -5,8 +5,6 @@ import Link from 'next/link'
 import { type InventoryItem, type StockMovement } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 
-export const dynamic = 'force-dynamic';
-
 type Movement = StockMovement & { contractor?: string | null }
 
 function ItemDetailPage({ params }: { params: { id: string } }) {
