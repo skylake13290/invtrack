@@ -3,29 +3,34 @@ import { getSupabase } from '@/lib/auth'
 
 export async function GET() {
   const supabase = getSupabase()
-  const { data, error } = await supabase
-    .from('inventory')
-    .select(`
-      id,
-      name,
-      min_level,
-      unit,
-      active,
-      stock_movements(qty_change)
-    `)
-.eq('active', true)
-.order('id')
-  
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  const result = (data || []).map((item: any) => ({
-  ...item,
-  stock: (item.stock_movements || []).reduce(
-    (sum: number, m: any) => sum + Number(m.qty_change),
-    0
-  )
-}))
 
-return NextResponse.json(result)
+  // Fetch inventory items (no nested join)
+  const { data: items, error } = await supabase
+    .from('inventory')
+    .select('id, name, min_level, unit, active')
+    .eq('active', true)
+    .order('id')
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Fetch all stock movement totals per item via a single aggregated query
+  const { data: movements } = await supabase
+    .from('stock_movements')
+    .select('inventory_id, qty_change')
+    .limit(100000) // high enough for total movements across all items
+
+  // Sum qty_change per inventory_id
+  const stockMap = new Map<string, number>()
+  for (const m of movements ?? []) {
+    stockMap.set(m.inventory_id, (stockMap.get(m.inventory_id) ?? 0) + Number(m.qty_change))
+  }
+
+  const result = (items ?? []).map((item: any) => ({
+    ...item,
+    stock: stockMap.get(item.id) ?? 0,
+  }))
+
+  return NextResponse.json(result)
 }
 
 export async function POST(req: NextRequest) {
