@@ -26,7 +26,7 @@ function InventoryPage() {
   }
 
   const load = async () => {
-    const res = await fetch('/api/inventory')
+    const res = await fetch('/api/inventory', { cache: 'no-store' })
     const data = await res.json()
     setItems(Array.isArray(data) ? data : [])
     setLoading(false)

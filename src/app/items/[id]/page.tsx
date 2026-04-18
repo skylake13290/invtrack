@@ -14,7 +14,7 @@ function ItemDetailPage({ params }: { params: { id: string } }) {
   const [loading,   setLoading]   = useState(true)
 
   useEffect(() => {
-    fetch(`/api/items/${encodeURIComponent(id)}`)
+    fetch(`/api/items/${encodeURIComponent(id)}`, { cache: 'no-store' })
       .then(r => r.json())
       .then(data => {
         setItem(data.item ?? null)

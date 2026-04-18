@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const supabase = getSupabase()
 
-  // Fetch inventory items (no nested join)
+  // Fetch inventory items without nested join
   const { data: items, error } = await supabase
     .from('inventory')
     .select('id, name, min_level, unit, active')
@@ -13,13 +15,13 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Fetch all stock movement totals per item via a single aggregated query
+  // Fetch ALL stock movements in one clean separate query
   const { data: movements } = await supabase
     .from('stock_movements')
     .select('inventory_id, qty_change')
-    .limit(100000) // high enough for total movements across all items
+    .limit(100000)
 
-  // Sum qty_change per inventory_id
+  // Sum per item correctly
   const stockMap = new Map<string, number>()
   for (const m of movements ?? []) {
     stockMap.set(m.inventory_id, (stockMap.get(m.inventory_id) ?? 0) + Number(m.qty_change))
