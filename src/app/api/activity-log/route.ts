@@ -1,15 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/auth'
 
-const role = req.headers.get('x-verified-role')
-if (!role) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+function getAuthError(req: NextRequest, allowedRoles?: string[]) {
+  const role = req.headers.get('x-verified-role')
+  
+  if (!role) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
-// For write operations, also check the role:
-if (!['admin', 'editor'].includes(role)) {
-  return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  return null
 }
 
 export async function GET(req: NextRequest) {
+
+  const authError = getAuthError(req)
+  if (authError) return authError
+
   const supabase = getSupabase()
   const { searchParams } = new URL(req.url)
   const page = parseInt(searchParams.get('page') ?? '0')
