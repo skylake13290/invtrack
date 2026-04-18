@@ -16,27 +16,26 @@ function StockLogPage() {
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState('')
 
-  const load = async () => {
-    const [movRes, invRes] = await Promise.all([
-      fetch('/api/stock-movements').then(r => r.json()),
-      fetch('/api/inventory').then(r => r.json()),
-    ])
-    setMovements(Array.isArray(movRes) ? movRes : [])
-    setInventory(Array.isArray(invRes) ? invRes : [])
-    setLoading(false)
-  }
-  useEffect(() => { load() }, [])
+  const load = async (searchTerm = '') => {
+  const url = searchTerm
+    ? `/api/stock-movements?search=${encodeURIComponent(searchTerm)}`
+    : '/api/stock-movements'
+  const [movRes, invRes] = await Promise.all([
+    fetch(url).then(r => r.json()),
+    fetch('/api/inventory').then(r => r.json()),
+  ])
+  setMovements(Array.isArray(movRes) ? movRes : [])
+  setInventory(Array.isArray(invRes) ? invRes : [])
+  setLoading(false)
+}
+useEffect(() => { load() }, [])
 
   const nameMap = new Map(inventory.map(i => [i.id, i.name]))
 
   const filtered = movements.filter(m => {
-    if (filter && m.action !== filter) return false
-    if (search) {
-      const s = search.toLowerCase()
-      return m.inventory_id.toLowerCase().includes(s) || (m.reference ?? '').toLowerCase().includes(s)
-    }
-    return true
-  })
+  if (filter && m.action !== filter) return false
+  return true
+})
 
   const restock = async () => {
     setError('')
@@ -71,7 +70,7 @@ function StockLogPage() {
             <span className="search-icon">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M10.5 10.5l3.5 3.5-1 1-3.5-3.5A6 6 0 111.5 6 6 6 0 0110.5 10.5zM6 11A5 5 0 106 1a5 5 0 000 10z"/></svg>
             </span>
-            <input className="form-input" placeholder="Search by item or reference…" value={search} onChange={e => setSearch(e.target.value)} />
+            <input className="form-input" placeholder="Search by item or reference…" value={search} onChange={e => { setSearch(e.target.value); load(e.target.value) }} />
           </div>
           <select className="form-input" style={{ width: 160 }} value={filter} onChange={e => setFilter(e.target.value)}>
             <option value="">All types</option>
