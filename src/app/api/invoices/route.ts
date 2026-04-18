@@ -15,7 +15,7 @@ function getAuthError(req: NextRequest, allowedRoles?: string[]) {
   return null
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
 
   const authError = getAuthError(req)
   if (authError) return authError
