@@ -100,7 +100,6 @@ function ItemDetailPage({ params }: { params: { id: string } }) {
                     <td className="text-muted" style={{ fontSize: 12 }}>{m.contractor ?? '—'}</td>
                     <td className="text-muted" style={{ fontSize: 12 }}>{m.job_type ?? '—'}</td>
                   </tr>
-                  </tr>
                 ))}
               </tbody>
             </table>
